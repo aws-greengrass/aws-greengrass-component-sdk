@@ -65,17 +65,17 @@ GgObjectType Object::index() const noexcept {
     return gg_obj_type(*this);
 }
 
-Object Object::operator[](std::string_view key) const {
+Object &Object::operator[](std::string_view key) const {
     if (index() != GG_TYPE_MAP) {
         GG_THROW_OR_ABORT(
             Exception { GG_ERR_PARSE, "gg::Object is not gg::Map" }
         );
     }
 
-    return *Map { gg_obj_into_map(*this) }[key];
+    return Map { gg_obj_into_map(*this) }[key];
 }
 
-Object Object::operator[](std::size_t idx) const {
+Object &Object::operator[](std::size_t idx) const {
     if (index() != GG_TYPE_LIST) {
         GG_THROW_OR_ABORT(
             Exception { GG_ERR_PARSE, "gg::Object is not gg::List" }

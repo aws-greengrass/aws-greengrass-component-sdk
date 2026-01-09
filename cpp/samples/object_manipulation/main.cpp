@@ -37,16 +37,11 @@ int main() {
         [](bool val) { std::cout << std::boolalpha << val << '\n'; },
         [](int64_t val) { std::cout << val << '\n'; },
         [](double val) { std::cout << val << '\n'; },
-        [](std::span<uint8_t> value) {
-            std::cout.write(
-                reinterpret_cast<char *>(value.data()),
-                static_cast<std::streamsize>(value.size())
-            ) << '\n';
-        },
+        [](const gg::Buffer &value) { std::cout << value << '\n'; },
         [](const gg::List &list) { std::cout << list.size() << " items\n"; },
         [](const gg::Map &pair_list) {
-            std::cout << get<bool>(*pair_list["key"]) << '\n';
-            std::cout << get<std::string_view>(*pair_list["another key"])
+            std::cout << get<bool>(pair_list["key"]) << '\n';
+            std::cout << get<std::string_view>(pair_list["another key"])
                       << '\n';
         },
     };
@@ -92,7 +87,7 @@ int main() {
 
         std::cout << "optional_obj:";
         std::visit(
-            print_object, optional_object.value_or(gg::Object {}).to_variant()
+            print_object, optional_object.value_or(gg::nullobj).to_variant()
         );
         std::cout << '\n';
     } else {

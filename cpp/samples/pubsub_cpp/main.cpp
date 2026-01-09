@@ -7,16 +7,6 @@
 #include <system_error>
 #include <thread>
 
-namespace {
-std::ostream &operator<<(std::ostream &os, const gg::Buffer &buffer) {
-    os.write(
-        reinterpret_cast<const char *>(buffer.data()),
-        static_cast<std::streamsize>(buffer.size())
-    );
-    return os;
-}
-}
-
 class PubsubHandler : public gg::ipc::LocalTopicCallback {
     void operator()(
         std::string_view topic,

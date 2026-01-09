@@ -31,8 +31,7 @@ namespace {
         Subscription locked { handle };
         std::invoke(
             *static_cast<ConfigurationUpdateCallback *>(ctx),
-            std::string_view { reinterpret_cast<char *>(component_name.data),
-                               component_name.len },
+            gg::Buffer { component_name },
             key_path,
             locked
         );

@@ -93,12 +93,8 @@ public:
         return *this = Map { other };
     }
 
-    mapped_type operator[](key_type key) const noexcept {
-        auto found = find(key);
-        if (found == cend()) {
-            return nullptr;
-        }
-        return found->second;
+    Object &operator[](key_type key) const {
+        return at(key);
     }
 
     Object &at(key_type key) const {

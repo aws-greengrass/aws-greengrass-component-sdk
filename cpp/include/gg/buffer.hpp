@@ -8,6 +8,7 @@
 #include <gg/utility.hpp>
 #include <cstdint>
 #include <algorithm>
+#include <ostream>
 #include <span>
 #include <stdexcept>
 #include <string_view>
@@ -57,6 +58,10 @@ public:
         return *this = Buffer { buffer };
     }
 
+    operator std::string_view() const noexcept {
+        return { reinterpret_cast<char *>(data()), size() };
+    }
+
     constexpr pointer data() const noexcept {
         return GgBuffer::data;
     }
@@ -104,6 +109,10 @@ public:
         return !(*this == rhs);
     }
 };
+
+inline std::ostream &operator<<(std::ostream &os, const gg::Buffer &buffer) {
+    return os << static_cast<std::string_view>(buffer);
+}
 
 }
 

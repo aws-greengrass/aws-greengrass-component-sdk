@@ -30,8 +30,7 @@ namespace {
         Subscription locked { handle };
         std::invoke(
             *static_cast<IotTopicCallback *>(ctx),
-            std::string_view { reinterpret_cast<char *>(topic.data),
-                               topic.len },
+            gg::Buffer { topic },
             payload,
             locked
         );

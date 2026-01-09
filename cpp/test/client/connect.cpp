@@ -14,9 +14,15 @@ extern "C" {
 GgError gg_process_wait(pid_t pid) noexcept;
 }
 
+namespace gg::test {
 namespace {
-std::string_view as_view(gg::Buffer buf) noexcept {
-    return { reinterpret_cast<char *>(buf.data()), buf.size() };
+    gg::Buffer get_socket_path() noexcept {
+        return gg_test_get_socket_path();
+    }
+
+    gg::ipc::AuthToken get_auth_token() noexcept {
+        return gg::ipc::AuthToken { gg_test_get_auth_token() };
+    }
 }
 }
 
@@ -61,15 +67,12 @@ namespace tests {
                 unsetenv("AWS_GG_NUCLEUS_DOMAIN_SOCKET_FILEPATH_FOR_COMPONENT");
                 // NOLINTEND(concurrency-mt-unsafe)
                 auto &client = gg::ipc::Client::get();
-                GG_TEST_ASSERT_OK(
-                    client
-                        .connect(
-                            as_view(gg_test_get_socket_path()),
-                            gg::ipc::AuthToken {
-                                as_view(gg_test_get_auth_token()) }
-                        )
-                        .value()
-                );
+                GG_TEST_ASSERT_OK(client
+                                      .connect(
+                                          gg::test::get_socket_path(),
+                                          gg::test::get_auth_token()
+                                      )
+                                      .value());
 
                 TEST_PASS();
             }

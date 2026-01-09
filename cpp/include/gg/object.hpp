@@ -121,10 +121,10 @@ public:
     GgObjectType index() const noexcept;
 
     // Assumes Object is a Map
-    Object operator[](std::string_view key) const;
+    Object &operator[](std::string_view key) const;
 
     // Assumes Object is a List
-    Object operator[](std::size_t idx) const;
+    Object &operator[](std::size_t idx) const;
 };
 
 template <class T>

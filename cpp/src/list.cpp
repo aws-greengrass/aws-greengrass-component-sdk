@@ -23,7 +23,7 @@ List::reference List::at(size_type pos) const {
     return operator[](pos);
 }
 
-List::reference List::operator[](size_type pos) const noexcept {
+List::reference List::operator[](List::size_type pos) const noexcept {
     return data()[pos];
 }
 

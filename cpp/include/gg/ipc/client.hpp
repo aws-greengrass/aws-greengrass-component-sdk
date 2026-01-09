@@ -30,13 +30,17 @@ namespace gg::ipc {
 class Subscription;
 
 class AuthToken {
-    std::string_view token;
+    Buffer token;
 
 public:
     constexpr AuthToken() noexcept = default;
 
-    explicit constexpr AuthToken(std::string_view token) noexcept
-        : token { token } { };
+    explicit AuthToken(std::string_view token) noexcept
+        : token { gg::Buffer { token } } { };
+
+    explicit constexpr AuthToken(const gg::Buffer &token) noexcept
+        : token { token } {
+    }
 
     explicit operator Buffer() const noexcept {
         return Buffer { token };
