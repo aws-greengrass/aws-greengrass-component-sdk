@@ -371,14 +371,14 @@ static GgError handle_application_error(
     }
 
     ret = error_callback(response_ctx, error_code, message);
-    if (ret != GG_ERR_OK) {
-        return ret;
+    // Must fix error if user error callback returns ok
+    if (ret == GG_ERR_OK) {
+        ret = GG_ERR_REMOTE;
     }
-
-    return GG_ERR_REMOTE;
+    return ret;
 }
 
-static GgError response_handler_inner(
+static GgError pass_response_to_user_callback(
     EventStreamCommonHeaders common_headers,
     EventStreamMessage msg,
     GgIpcResultCallback *result_callback,
@@ -439,47 +439,64 @@ typedef struct {
 } ResponseHandlerCtx;
 
 // Must hold stream_state_mtx
-static void response_handler(
+static GgError response_handler_inner(
     uint16_t index,
-    void *ctx,
+    ResponseHandlerCtx *call_ctx,
     EventStreamCommonHeaders common_headers,
     EventStreamMessage msg
 ) {
-    ResponseHandlerCtx *call_ctx = ctx;
+    if ((call_ctx->sub_callback != NULL)
+        && ((common_headers.message_flags & EVENTSTREAM_TERMINATE_STREAM)
+            != 0)) {
+        GG_LOGE(
+            "Terminate stream received on stream_id %" PRIi32
+            " for initial subscription response.",
+            common_headers.stream_id
+        );
+        clear_stream_index(index);
+        return GG_ERR_FAILURE;
+    }
 
-    call_ctx->ret = response_handler_inner(
+    GgError ret = pass_response_to_user_callback(
         common_headers,
         msg,
         call_ctx->result_callback,
         call_ctx->error_callback,
         call_ctx->response_ctx
     );
-
-    if ((call_ctx->sub_callback == NULL) || (call_ctx->ret != GG_ERR_OK)) {
+    if (ret != GG_ERR_OK) {
         clear_stream_index(index);
-    } else {
-        if ((common_headers.message_flags & EVENTSTREAM_TERMINATE_STREAM)
-            != 0) {
-            GG_LOGE(
-                "Terminate stream received on stream_id %" PRIi32
-                " for initial subscription response.",
-                common_headers.stream_id
-            );
-            clear_stream_index(index);
-            call_ctx->ret = GG_ERR_FAILURE;
-        } else {
-            set_stream_index(
-                index,
-                common_headers.stream_id,
-                (StreamHandler) {
-                    .fn = call_ctx->sub_callback,
-                    .ctx = call_ctx->sub_callback_ctx,
-                    .aux_ctx = call_ctx->sub_callback_aux_ctx,
-                }
-            );
-        }
+        return ret;
     }
 
+    // Must not error after user result callback returns ok
+
+    if (call_ctx->sub_callback == NULL) {
+        clear_stream_index(index);
+    } else {
+        set_stream_index(
+            index,
+            common_headers.stream_id,
+            (StreamHandler) {
+                .fn = call_ctx->sub_callback,
+                .ctx = call_ctx->sub_callback_ctx,
+                .aux_ctx = call_ctx->sub_callback_aux_ctx,
+            }
+        );
+    }
+    return GG_ERR_OK;
+}
+
+// Must hold stream_state_mtx
+static void response_handler(
+    uint16_t index,
+    ResponseHandlerCtx *ctx,
+    EventStreamCommonHeaders common_headers,
+    EventStreamMessage msg
+) {
+    ResponseHandlerCtx *call_ctx = ctx;
+    call_ctx->ret
+        = response_handler_inner(index, call_ctx, common_headers, msg);
     call_ctx->ready = true;
     pthread_cond_signal(call_ctx->cond);
 }
