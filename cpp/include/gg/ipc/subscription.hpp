@@ -122,7 +122,8 @@ public:
 }
 
 /// Subscription hashing
-template <> class std::hash<gg::ipc::Subscription> {
+template <>
+class std::hash<gg::ipc::Subscription> {
 public:
     std::size_t operator()(
         const gg::ipc::Subscription &subscription

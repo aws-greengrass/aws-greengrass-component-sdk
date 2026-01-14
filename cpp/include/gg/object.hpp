@@ -175,7 +175,8 @@ using is_buffer_type = std::disjunction<
     std::is_same<T, std::span<uint8_t>>,
     std::is_same<T, std::string_view>>;
 
-template <ObjectType T> constexpr GgObjectType index_for_type() noexcept {
+template <ObjectType T>
+constexpr GgObjectType index_for_type() noexcept {
     using Type = std::remove_cvref_t<T>;
     if constexpr (std::is_same_v<Type, bool>) {
         return GG_TYPE_BOOLEAN;
@@ -194,7 +195,8 @@ template <ObjectType T> constexpr GgObjectType index_for_type() noexcept {
     }
 }
 
-template <ObjectType T> std::optional<T> get_if(Object *obj) noexcept {
+template <ObjectType T>
+std::optional<T> get_if(Object *obj) noexcept {
     using Type = std::remove_cvref_t<T>;
     if (obj == nullptr) {
         return std::nullopt;
@@ -221,7 +223,8 @@ template <ObjectType T> std::optional<T> get_if(Object *obj) noexcept {
     }
 }
 
-template <ObjectType T> T get(Object obj) {
+template <ObjectType T>
+T get(Object obj) {
     auto value = get_if<T>(&obj);
     if (!value) {
         GG_THROW_OR_ABORT(

@@ -17,14 +17,16 @@ namespace gg {
 
 class MissingKey { };
 
-template <class T> struct is_map_schema_candidate {
+template <class T>
+struct is_map_schema_candidate {
     static constexpr bool value = std::disjunction_v<
         is_object_alternative<T>,
         std::is_same<Object, T>,
         std::is_same<MissingKey, T>>;
 };
 
-template <class T> struct is_map_schema_candidate<std::optional<T>> {
+template <class T>
+struct is_map_schema_candidate<std::optional<T>> {
     static constexpr bool value = std::disjunction_v<
         is_object_alternative<T>,
         std::is_same<std::optional<Object>, std::optional<T>>>;
@@ -34,7 +36,8 @@ template <class T>
 concept MapSchemaType = is_map_schema_candidate<T>::value;
 
 // code deduplication for Optional and non-Optional schema
-template <class T> class MapSchemaBase {
+template <class T>
+class MapSchemaBase {
 protected:
     static GgError retrieve_value(
         Map::iterator iter, Object **object, T &entry
@@ -57,7 +60,8 @@ protected:
     }
 };
 
-template <MapSchemaType T> class MapSchema : MapSchemaBase<T> {
+template <MapSchemaType T>
+class MapSchema : MapSchemaBase<T> {
     std::string_view key;
     Object **object;
     T *entry;
@@ -129,7 +133,8 @@ public:
     }
 };
 
-template <> class MapSchema<MissingKey> {
+template <>
+class MapSchema<MissingKey> {
     std::string_view key;
 
 public:

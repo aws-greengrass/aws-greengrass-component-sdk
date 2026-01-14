@@ -60,7 +60,8 @@ const std::error_category &category() noexcept;
 // Allow implicit conversion from GgError to std::error_code and comparisons
 // between GgError and std::error_code
 namespace std {
-template <> struct is_error_code_enum<GgError> : true_type { };
+template <>
+struct is_error_code_enum<GgError> : true_type { };
 }
 
 // implicit conversion uses make_error_code

@@ -23,7 +23,8 @@ GgError gg_process_wait(pid_t pid) noexcept;
 }
 
 namespace {
-template <class T> void test_config_overload(T expected) {
+template <class T>
+void test_config_overload(T expected) {
     std::array keys = {
         gg::Buffer { "key" },
     };

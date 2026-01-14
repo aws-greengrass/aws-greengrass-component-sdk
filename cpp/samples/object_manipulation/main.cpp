@@ -12,7 +12,8 @@
 #include <system_error>
 #include <variant>
 
-template <class... Ts> struct Overloads : Ts... {
+template <class... Ts>
+struct Overloads : Ts... {
     using Ts::operator()...;
 };
 
