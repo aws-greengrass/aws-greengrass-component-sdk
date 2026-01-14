@@ -2,11 +2,11 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#include "client_raw_c_api.hpp"
 #include <gg/arena.hpp>
 #include <gg/buffer.hpp>
 #include <gg/error.hpp>
 #include <gg/ipc/client.hpp>
-#include <gg/ipc/client_raw_c_api.hpp>
 #include <gg/list.hpp>
 #include <gg/map.hpp>
 #include <gg/object.hpp>

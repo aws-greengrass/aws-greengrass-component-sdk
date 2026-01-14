@@ -9,7 +9,7 @@
 #include <limits>
 #include <type_traits>
 
-#if __cpp_exceptions
+#ifdef __cpp_exceptions
 #define GG_THROW_OR_ABORT(...) throw(__VA_ARGS__)
 #else
 #include <cstdlib>

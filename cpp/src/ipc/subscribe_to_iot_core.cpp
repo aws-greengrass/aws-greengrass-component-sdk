@@ -1,7 +1,7 @@
+#include "client_c_api.hpp"
 #include <gg/buffer.hpp>
 #include <gg/error.hpp>
 #include <gg/ipc/client.hpp>
-#include <gg/ipc/client_c_api.hpp>
 #include <gg/ipc/subscription.hpp>
 #include <gg/types.hpp>
 #include <cstdint>

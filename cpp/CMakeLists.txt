@@ -30,7 +30,7 @@ endif()
 
 target_compile_options(gg-sdk++ PRIVATE -pthread -fno-strict-aliasing
                                         -std=gnu++20)
-target_include_directories(gg-sdk++ PRIVATE include priv_include)
+target_include_directories(gg-sdk++ PRIVATE include)
 target_include_directories(gg-sdk++ SYSTEM INTERFACE include)
 target_compile_definitions(gg-sdk++ PRIVATE "GG_MODULE=(\"gg-sdk++\")")
 target_link_libraries(gg-sdk++ PRIVATE gg-sdk)

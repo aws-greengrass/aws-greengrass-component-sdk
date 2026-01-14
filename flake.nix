@@ -27,7 +27,6 @@
           ./samples
           ./cpp/CMakeLists.txt
           ./cpp/include
-          ./cpp/priv_include
           ./cpp/src
           ./cpp/.clang-tidy
           ./cpp/samples
@@ -202,7 +201,7 @@
                 (with pkgs; [clangd-tidy clang-tools fd])}:$PATH
               clangd-tidy -j$(nproc) --color=always \
                 -p ${clangBuildDirCpp pkgs} \
-                $(fd . cpp/src cpp/include cpp/priv_include \
+                $(fd . cpp/src cpp/include \
                   -e c -e h -e cpp -e hpp)
             '';
 
