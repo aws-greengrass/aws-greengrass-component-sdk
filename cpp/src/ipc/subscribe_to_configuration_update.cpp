@@ -1,9 +1,11 @@
-#include "client_c_api.hpp"
+// aws-greengrass-component-sdk - Lightweight AWS IoT Greengrass SDK
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 #include <gg/buffer.hpp>
 #include <gg/error.hpp>
 #include <gg/ipc/client.hpp>
 #include <gg/ipc/subscription.hpp>
-#include <gg/types.hpp>
 #include <exception>
 #include <functional>
 #include <iostream>

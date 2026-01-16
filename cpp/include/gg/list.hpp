@@ -6,10 +6,14 @@
 #define GG_LIST_HPP
 
 #include <gg/error.hpp>
-#include <gg/types.hpp>
 #include <gg/utility.hpp>
 #include <cstddef>
 #include <type_traits>
+
+extern "C" {
+#include <gg/list.h>
+#include <gg/object.h>
+}
 
 namespace gg {
 

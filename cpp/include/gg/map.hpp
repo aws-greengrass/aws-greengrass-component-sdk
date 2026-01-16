@@ -6,7 +6,6 @@
 #define GG_MAP_HPP
 
 #include <gg/buffer.hpp>
-#include <gg/types.hpp>
 #include <gg/utility.hpp>
 #include <stddef.h>
 #include <cstdint>
@@ -18,6 +17,11 @@
 #include <string_view>
 #include <type_traits>
 #include <utility>
+
+extern "C" {
+#include <gg/map.h>
+#include <gg/object.h>
+}
 
 namespace gg {
 

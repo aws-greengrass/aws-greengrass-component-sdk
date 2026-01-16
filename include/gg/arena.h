@@ -53,9 +53,9 @@ void *gg_arena_alloc(GgArena *arena, size_t size, size_t alignment);
 /// `old_size` must match the original allocation size.
 /// Returns GG_ERR_OK on success, GG_ERR_NOMEM if insufficient space,
 /// or GG_ERR_INVALID if validation fails.
-NONNULL(2) ACCESS(read_write, 1) ACCESS(none, 2)
+NONNULL(1, 2) ACCESS(read_write, 1) ACCESS(none, 2)
 GgError gg_arena_resize_last(
-    GgArena arena[static 1], const void *ptr, size_t old_size, size_t size
+    GgArena *arena, const void *ptr, size_t old_size, size_t size
 );
 
 /// Check if arena's memory region contains ptr.
@@ -72,22 +72,22 @@ GgBuffer gg_arena_alloc_rest(GgArena *arena);
 /// Copies buffers, lists, and maps that are not already in `arena`.
 /// Updates `obj` in place to reference the copied data.
 /// Returns GG_ERR_OK on success, GG_ERR_NOMEM if insufficient space.
-ACCESS(read_write, 1) ACCESS(read_write, 2)
-GgError gg_arena_claim_obj(GgObject obj[static 1], GgArena *arena);
+NONNULL(1) ACCESS(read_write, 1) ACCESS(read_write, 2)
+GgError gg_arena_claim_obj(GgObject *obj, GgArena *arena);
 
 /// Modify a buffer to point into an arena.
 /// Copies buffer data if not already in `arena`.
 /// Updates `buf` in place to reference the copied data.
 /// Returns GG_ERR_OK on success, GG_ERR_NOMEM if insufficient space.
-ACCESS(read_write, 1) ACCESS(read_write, 2)
-GgError gg_arena_claim_buf(GgBuffer buf[static 1], GgArena *arena);
+NONNULL(1) ACCESS(read_write, 1) ACCESS(read_write, 2)
+GgError gg_arena_claim_buf(GgBuffer *buf, GgArena *arena);
 
 /// Modify buffer references in an object to point into an arena.
 /// Copies buffers and map keys that are not already in `arena`.
 /// Does not copy list or map memory.
 /// Updates buffer pointers in place throughout the object tree.
 /// Returns GG_ERR_OK on success, GG_ERR_NOMEM if insufficient space.
-ACCESS(read_write, 1) ACCESS(read_write, 2)
-GgError gg_arena_claim_obj_bufs(GgObject obj[static 1], GgArena *arena);
+NONNULL(1) ACCESS(read_write, 1) ACCESS(read_write, 2)
+GgError gg_arena_claim_obj_bufs(GgObject *obj, GgArena *arena);
 
 #endif

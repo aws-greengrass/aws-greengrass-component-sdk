@@ -9,7 +9,6 @@
 #include <gg/error.hpp>
 #include <gg/list.hpp>
 #include <gg/map.hpp>
-#include <gg/types.hpp>
 #include <gg/utility.hpp>
 #include <cstdint>
 #include <cstdlib>

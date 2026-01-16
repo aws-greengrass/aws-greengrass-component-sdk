@@ -5,7 +5,6 @@
 #include <gg/buffer.hpp>
 #include <gg/map.hpp>
 #include <gg/object.hpp>
-#include <gg/types.hpp>
 
 namespace gg {
 

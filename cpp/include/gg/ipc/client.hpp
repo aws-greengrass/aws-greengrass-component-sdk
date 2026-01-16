@@ -10,7 +10,6 @@
 #include <gg/map.hpp>
 #include <gg/object.hpp>
 #include <gg/sdk.hpp>
-#include <gg/types.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <chrono>
@@ -21,6 +20,10 @@
 #include <string_view>
 #include <system_error>
 #include <utility>
+
+extern "C" {
+#include <gg/ipc/client.h>
+}
 
 namespace gg::ipc {
 
@@ -41,6 +44,8 @@ public:
 
     static std::optional<AuthToken> from_environment() noexcept;
 };
+
+using ComponentState = GgComponentState;
 
 class LocalTopicCallback {
 public:

@@ -5,7 +5,6 @@
 #ifndef GG_BUFFER_HPP
 #define GG_BUFFER_HPP
 
-#include <gg/types.hpp>
 #include <gg/utility.hpp>
 #include <cstdint>
 #include <algorithm>
@@ -13,6 +12,10 @@
 #include <stdexcept>
 #include <string_view>
 #include <type_traits>
+
+extern "C" {
+#include <gg/buffer.h>
+}
 
 namespace gg {
 

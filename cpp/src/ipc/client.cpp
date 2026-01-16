@@ -2,18 +2,16 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-#include "client_c_api.hpp"
 #include <gg/buffer.hpp>
 #include <gg/error.hpp>
 #include <gg/ipc/client.hpp>
+#include <gg/ipc/types.h>
 #include <gg/map.hpp>
 #include <stdint.h>
 #include <cstdlib>
 #include <optional>
 #include <string_view>
 #include <system_error>
-
-enum class GgComponentState;
 
 namespace gg::ipc {
 
@@ -52,9 +50,7 @@ std::error_code Client::connect(
     );
 }
 
-std::error_code Client::update_component_state(
-    GgComponentState state
-) noexcept {
+std::error_code Client::update_component_state(ComponentState state) noexcept {
     return ggipc_update_state(state);
 }
 

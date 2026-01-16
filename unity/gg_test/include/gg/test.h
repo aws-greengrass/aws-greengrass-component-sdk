@@ -1,16 +1,12 @@
 #ifndef GG_TEST_UNITY_HELPERS_H
 #define GG_TEST_UNITY_HELPERS_H
 
-#include <unity_internals.h>
-#ifdef __cplusplus
-#include <gg/types.hpp>
-#else
 #include <gg/buffer.h>
 #include <gg/object.h>
-#include <stdbool.h>
-#endif
 #include <sys/types.h>
 #include <unity.h>
+#include <unity_internals.h>
+#include <stdbool.h>
 #include <stddef.h>
 
 // IWYU pragma: begin_keep

@@ -1,23 +1,19 @@
 #ifndef GG_IPC_MOCK_H
 #define GG_IPC_MOCK_H
 
+#include "gg/eventstream/types.h"
 #include <gg/attr.h>
 #include <sys/types.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#ifndef __cplusplus
-#include <stdbool.h>
-#endif
 
 // TODO: fixup headers so that IWYU doesn't completely break here.
 
 // IWYU pragma: begin_exports
 #ifdef __cplusplus
 #include <gg/error.hpp>
-#include <gg/ipc/mock_types.hpp>
-#include <gg/types.hpp>
 #else
-#include "gg/eventstream/types.h"
 #include <gg/buffer.h>
 #include <gg/error.h>
 #include <gg/object.h>

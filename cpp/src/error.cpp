@@ -5,11 +5,6 @@
 #include <gg/error.hpp>
 #include <system_error>
 
-extern "C" {
-[[gnu::const]]
-const char *gg_strerror(GgError err) noexcept;
-}
-
 namespace gg::detail {
 class category : public std::error_category {
 public:

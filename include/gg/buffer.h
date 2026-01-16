@@ -69,8 +69,8 @@ bool cbmc_buffer_restrict(GgBuffer *buf) {
 #endif
 
 /// Convert null-terminated string to buffer.
-PURE NULL_TERMINATED_STRING_ARG(1)
-GgBuffer gg_buffer_from_null_term(char str[static 1]);
+PURE NONNULL(1) NULL_TERMINATED_STRING_ARG(1)
+GgBuffer gg_buffer_from_null_term(char *str);
 
 /// Returns whether two buffers have identical content.
 PURE
@@ -81,16 +81,16 @@ PURE
 bool gg_buffer_has_prefix(GgBuffer buf, GgBuffer prefix);
 
 /// Removes a prefix. Returns whether the prefix was removed.
-ACCESS(read_write, 1)
-bool gg_buffer_remove_prefix(GgBuffer buf[static 1], GgBuffer prefix);
+NONNULL(1) ACCESS(read_write, 1)
+bool gg_buffer_remove_prefix(GgBuffer *buf, GgBuffer prefix);
 
 /// Returns whether the buffer has the given suffix.
 PURE
 bool gg_buffer_has_suffix(GgBuffer buf, GgBuffer suffix);
 
 /// Removes a suffix. Returns whether the suffix was removed.
-ACCESS(read_write, 1)
-bool gg_buffer_remove_suffix(GgBuffer buf[static 1], GgBuffer suffix);
+NONNULL(1) ACCESS(read_write, 1)
+bool gg_buffer_remove_suffix(GgBuffer *buf, GgBuffer suffix);
 
 /// Returns whether the buffer contains the given substring.
 /// Outputs start index if non-null.
@@ -122,8 +122,8 @@ GgBuffer gg_buffer_substr(GgBuffer buf, size_t start, size_t end) CBMC_CONTRACT(
 );
 
 /// Parse an integer from a string.
-ACCESS(write_only, 2)
-GgError gg_str_to_int64(GgBuffer str, int64_t value[static 1]) CBMC_CONTRACT(
+NONNULL(2) ACCESS(write_only, 2)
+GgError gg_str_to_int64(GgBuffer str, int64_t *value) CBMC_CONTRACT(
     requires(cbmc_buffer_restrict(&str)),
     requires(cbmc_restrict(value)),
     ensures(cbmc_enum_valid(cbmc_return)),

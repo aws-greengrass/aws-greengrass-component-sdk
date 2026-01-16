@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <assert.h>
+#include <gg/attr.h>
 #include <gg/buffer.h>
 #include <gg/cbmc.h>
 #include <gg/error.h>
@@ -12,7 +13,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-GgBuffer gg_buffer_from_null_term(char str[static 1]) {
+NONNULL(1)
+GgBuffer gg_buffer_from_null_term(char *str) {
     assert(str != NULL);
     return (GgBuffer) { .data = (uint8_t *) str, .len = strlen(str) };
 }

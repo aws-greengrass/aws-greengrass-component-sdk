@@ -1,7 +1,6 @@
 #ifndef GG_IPC_SUBSCRIPTION_HPP
 #define GG_IPC_SUBSCRIPTION_HPP
 
-#include <gg/types.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <compare>
@@ -9,7 +8,7 @@
 #include <utility>
 
 extern "C" {
-void ggipc_close_subscription(GgIpcSubscriptionHandle handle) noexcept;
+#include <gg/ipc/client.h>
 }
 
 namespace gg::ipc {
