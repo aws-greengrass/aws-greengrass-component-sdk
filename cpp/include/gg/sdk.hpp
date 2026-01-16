@@ -5,10 +5,6 @@
 #ifndef GG_SDK_HPP
 #define GG_SDK_HPP
 
-extern "C" {
-#include <gg/sdk.h>
-}
-
 namespace gg {
 class Sdk {
 private:
@@ -20,10 +16,6 @@ public:
         return singleton;
     }
 };
-
-inline Sdk::Sdk() noexcept {
-    gg_sdk_init();
-}
 
 }
 
