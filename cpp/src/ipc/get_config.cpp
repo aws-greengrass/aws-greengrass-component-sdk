@@ -13,6 +13,7 @@
 
 extern "C" {
 #include <gg/arena.h>
+#include <gg/ipc/client.h>
 }
 
 namespace gg::ipc {

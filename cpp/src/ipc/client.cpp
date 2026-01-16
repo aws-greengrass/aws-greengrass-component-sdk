@@ -13,6 +13,10 @@
 #include <string_view>
 #include <system_error>
 
+extern "C" {
+#include <gg/ipc/client.h>
+}
+
 namespace gg::ipc {
 
 std::optional<AuthToken> AuthToken::from_environment() noexcept {

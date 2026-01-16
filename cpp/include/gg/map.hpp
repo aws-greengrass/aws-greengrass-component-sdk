@@ -7,7 +7,6 @@
 
 #include <gg/buffer.hpp>
 #include <gg/utility.hpp>
-#include <stddef.h>
 #include <cstdint>
 #include <algorithm>
 #include <iterator>
@@ -19,7 +18,7 @@
 #include <utility>
 
 extern "C" {
-#include <gg/object.h>
+#include <gg/types.h>
 }
 
 namespace gg {

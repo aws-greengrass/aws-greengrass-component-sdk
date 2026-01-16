@@ -12,6 +12,10 @@
 #include <span>
 #include <system_error>
 
+extern "C" {
+#include <gg/ipc/client.h>
+}
+
 namespace gg::ipc {
 // singleton interface class.
 // NOLINTBEGIN(readability-convert-member-functions-to-static)

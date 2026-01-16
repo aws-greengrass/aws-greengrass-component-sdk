@@ -9,6 +9,7 @@
 #include <gg/attr.h>
 #include <gg/buffer.h>
 #include <gg/error.h>
+#include <gg/ipc/types.h>
 #include <gg/object.h>
 #include <stdint.h>
 
@@ -38,11 +39,6 @@ GgError ggipc_connect(void);
 GgError ggipc_connect_with_token(GgBuffer socket_path, GgBuffer auth_token);
 
 // Subscription management
-
-/// Handle for referring to a subscripion created by an IPC call.
-typedef struct {
-    uint32_t val;
-} GgIpcSubscriptionHandle;
 
 /// Close a subscription returned by an IPC call.
 void ggipc_close_subscription(GgIpcSubscriptionHandle handle);
@@ -162,12 +158,6 @@ GgError ggipc_update_config(
     const struct timespec *timestamp,
     GgObject value_to_merge
 );
-
-/// Component state values for UpdateState
-typedef enum ENUM_EXTENSIBILITY(closed) {
-    GG_COMPONENT_STATE_RUNNING,
-    GG_COMPONENT_STATE_ERRORED
-} GgComponentState;
 
 /// Update the state of this component.
 /// Reports component state to the Greengrass nucleus.

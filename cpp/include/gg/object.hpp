@@ -19,6 +19,11 @@
 #include <type_traits>
 #include <variant>
 
+extern "C" {
+#include <gg/object.h>
+#include <gg/types.h>
+}
+
 namespace gg {
 
 template <class T>

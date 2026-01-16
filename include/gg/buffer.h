@@ -10,6 +10,7 @@
 #include <gg/attr.h>
 #include <gg/cbmc.h>
 #include <gg/error.h>
+#include <gg/types.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -17,18 +18,6 @@
 #if defined __COVERITY__ || defined __CPROVER__
 #define GG_DISABLE_MACRO_TYPE_CHECKING
 #endif
-
-/// A fixed buffer of bytes. Possibly a string.
-typedef struct {
-    uint8_t *data;
-    size_t len;
-} GgBuffer;
-
-/// An array of `GgBuffer`.
-typedef struct {
-    GgBuffer *bufs;
-    size_t len;
-} GgBufList;
 
 #define GG_STR(strlit) \
     ((GgBuffer) { .data = (uint8_t *) ("" strlit ""), \

@@ -14,7 +14,7 @@
 #include <type_traits>
 
 extern "C" {
-#include <gg/buffer.h>
+#include <gg/types.h>
 }
 
 namespace gg {

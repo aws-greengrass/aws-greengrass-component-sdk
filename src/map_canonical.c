@@ -1,5 +1,10 @@
-#include "gg/map.h"
+// aws-greengrass-component-sdk - Lightweight AWS IoT Greengrass SDK
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 #include <gg/log.h>
+#include <gg/map.h>
+#include <gg/object.h>
 
 static void swap_pairs(GgKV *lhs, GgKV *rhs) {
     GgKV temp = *lhs;

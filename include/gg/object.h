@@ -10,6 +10,7 @@
 #include <gg/attr.h>
 #include <gg/buffer.h>
 #include <gg/error.h>
+#include <gg/types.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -24,42 +25,6 @@
 ///   subobject_count(list) = len + sum({item: subobject_count(item)})
 ///   subobject_count(map) = 2 * len + sum({pair: subobject_count(pair.value))})
 #define GG_MAX_OBJECT_SUBOBJECTS (255U)
-
-/// A generic object.
-typedef struct {
-    // Used only with memcpy so no aliasing with contents
-    uint8_t _private[(sizeof(void *) == 4) ? 9 : 11];
-} GgObject;
-
-/// Type tag for `GgObject`.
-typedef enum {
-    GG_TYPE_NULL = 0,
-    GG_TYPE_BOOLEAN,
-    GG_TYPE_I64,
-    GG_TYPE_F64,
-    GG_TYPE_BUF,
-    GG_TYPE_LIST,
-    GG_TYPE_MAP,
-} GgObjectType;
-
-/// An array of `GgObject`.
-typedef struct {
-    GgObject *items;
-    size_t len;
-} GgList;
-
-/// A key-value pair used for `GgMap`.
-/// `key` must be an UTF-8 encoded string.
-typedef struct {
-    // KVs alias with pointers to their value objects
-    uint8_t _private[sizeof(void *) + 2 + sizeof(GgObject)];
-} GgKV;
-
-/// A map of UTF-8 strings to `GgObject`s.
-typedef struct {
-    GgKV *pairs;
-    size_t len;
-} GgMap;
 
 /// Create list literal from object literals.
 #define GG_LIST(...) \

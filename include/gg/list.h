@@ -9,7 +9,7 @@
 
 #include <gg/attr.h>
 #include <gg/error.h>
-#include <gg/object.h>
+#include <gg/types.h>
 
 // NOLINTBEGIN(bugprone-macro-parentheses)
 /// Loop over the objects in a list.

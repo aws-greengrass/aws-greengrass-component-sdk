@@ -22,7 +22,7 @@
 #include <utility>
 
 extern "C" {
-#include <gg/ipc/client.h>
+#include <gg/ipc/types.h>
 }
 
 namespace gg::ipc {
