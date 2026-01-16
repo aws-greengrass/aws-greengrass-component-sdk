@@ -5,6 +5,10 @@
 #include <gg/list.hpp>
 #include <gg/object.hpp>
 
+extern "C" {
+#include <gg/list.h>
+}
+
 namespace gg {
 
 List::reference List::operator[](size_type pos) const noexcept {
@@ -13,6 +17,10 @@ List::reference List::operator[](size_type pos) const noexcept {
 
 List::pointer List::data() const noexcept {
     return static_cast<Object *>(items);
+}
+
+GgError List::type_check(GgObjectType type) const noexcept {
+    return gg_list_type_check(*this, type);
 }
 
 }

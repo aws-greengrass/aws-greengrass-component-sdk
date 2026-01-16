@@ -19,7 +19,6 @@
 #include <utility>
 
 extern "C" {
-#include <gg/map.h>
 #include <gg/object.h>
 }
 
@@ -53,10 +52,7 @@ public:
         : KV { Buffer { key }, value } {
     }
 
-    std::string_view key() const noexcept {
-        GgBuffer key = gg_kv_key(*this);
-        return std::string_view { reinterpret_cast<char *>(key.data), key.len };
-    }
+    std::string_view key() const noexcept;
 
     Object *value() noexcept;
 
@@ -64,17 +60,11 @@ public:
         return const_cast<KV *>(this)->value();
     }
 
-    void key(std::string_view str) noexcept {
-        gg_kv_set_key(this, Buffer { str });
-    }
+    void key(std::string_view str) noexcept;
 
-    void key(std::span<uint8_t> key) noexcept {
-        gg_kv_set_key(this, Buffer { key });
-    }
+    void key(std::span<uint8_t> key) noexcept;
 
-    void value(GgObject obj) noexcept {
-        *gg_kv_val(this) = obj;
-    }
+    void value(GgObject obj) noexcept;
 };
 
 /// A pair-list of key-value pairs

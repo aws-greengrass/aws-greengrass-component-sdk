@@ -11,7 +11,6 @@
 #include <type_traits>
 
 extern "C" {
-#include <gg/list.h>
 #include <gg/object.h>
 }
 
@@ -55,9 +54,7 @@ public:
     }
 
     // return GG_ERR_OK if all elements are of the specified type
-    GgError type_check(GgObjectType type) const noexcept {
-        return gg_list_type_check(*this, type);
-    }
+    GgError type_check(GgObjectType type) const noexcept;
 
     // element access
 
