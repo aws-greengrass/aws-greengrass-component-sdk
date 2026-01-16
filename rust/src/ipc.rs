@@ -439,7 +439,7 @@ impl Sdk {
         &self,
         key_path: &[&str],
         component_name: Option<&str>,
-        value_buf: &'a mut [MaybeUninit<u8>],
+        result_mem: &'a mut [MaybeUninit<u8>],
     ) -> Result<&'a str> {
         let mut c_key_path_mem = [MaybeUninit::uninit(); MAX_KEY_PATH_LEN];
         let c_key_path = key_path_to_buf_list(key_path, &mut c_key_path_mem)?;
@@ -450,8 +450,8 @@ impl Sdk {
         });
 
         let mut value = c::GgBuffer {
-            data: value_buf.as_mut_ptr().cast::<u8>(),
-            len: value_buf.len(),
+            data: result_mem.as_mut_ptr().cast::<u8>(),
+            len: result_mem.len(),
         };
 
         Result::from(unsafe {
