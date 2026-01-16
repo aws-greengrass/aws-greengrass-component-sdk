@@ -31,6 +31,10 @@ public:
         : GgBuffer { bytes.data(), bytes.size() } {
     }
 
+    Buffer(std::span<std::byte> bytes) noexcept
+        : GgBuffer { (uint8_t *) bytes.data(), bytes.size() } {
+    }
+
     Buffer(std::string_view sv) noexcept
         : Buffer { reinterpret_cast<uint8_t *>(const_cast<char *>(sv.data())),
                    sv.size() } {

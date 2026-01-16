@@ -90,7 +90,8 @@ namespace tests {
             std::array pairs = { gg::KV { "key", value } };
             gg::Map expected { pairs.data(), pairs.size() };
 
-            gg::ipc::AllocatedObject obj;
+            std::byte mem[256];
+            gg::Object obj;
 
             pid_t pid = fork();
             if (pid < 0) {
@@ -103,15 +104,15 @@ namespace tests {
 
                 try {
                     GG_TEST_ASSERT_OK(
-                        client.get_config(keys, std::nullopt, obj).value()
+                        client
+                            .get_config(keys, std::nullopt, std::span(mem), obj)
+                            .value()
                     );
                 } catch (...) {
                     TEST_FAIL_MESSAGE("Exception caught from get_config");
                 }
 
-                gg::Object inner = obj.get();
-
-                auto map = gg::get_if<gg::Map>(&inner);
+                auto map = gg::get_if<gg::Map>(&obj);
                 TEST_ASSERT_MESSAGE(
                     static_cast<bool>(map), "Result was not map"
                 );
@@ -165,12 +166,8 @@ namespace tests {
             std::array keys = { gg::Buffer { "config" }, gg::Buffer { "key" } };
 
             std::string_view expected = "Hello World!";
-            std::string value;
-            try {
-                value.reserve(16);
-            } catch (std::bad_alloc &e) {
-                TEST_FAIL_MESSAGE("Failed to allocate string");
-            }
+            std::byte mem[256];
+            std::string_view value;
 
             pid_t pid = fork();
             if (pid < 0) {
@@ -183,7 +180,11 @@ namespace tests {
 
                 try {
                     GG_TEST_ASSERT_OK(
-                        client.get_config(keys, std::nullopt, value).value()
+                        client
+                            .get_config(
+                                keys, std::nullopt, std::span(mem), value
+                            )
+                            .value()
                     );
                 } catch (...) {
                     TEST_FAIL_MESSAGE("Exception caught from get_config");

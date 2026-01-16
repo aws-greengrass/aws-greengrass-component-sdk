@@ -44,9 +44,6 @@ std::error_code Client::connect() noexcept {
     return connect(socket_path, *auth_token);
 }
 
-// singleton interface class.
-// NOLINTBEGIN(readability-convert-member-functions-to-static)
-
 std::error_code Client::connect(
     std::string_view socket_path, AuthToken auth_token
 ) noexcept {
@@ -84,7 +81,5 @@ std::error_code Client::restart_component(
 ) noexcept {
     return ggipc_restart_component(Buffer { component_name });
 }
-
-// NOLINTEND(readability-convert-member-functions-to-static)
 
 }

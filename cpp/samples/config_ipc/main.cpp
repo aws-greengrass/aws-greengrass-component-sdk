@@ -5,7 +5,7 @@
 #include <iostream>
 #include <optional>
 #include <span>
-#include <string>
+#include <string_view>
 #include <system_error>
 #include <thread>
 
@@ -31,8 +31,11 @@ int main() {
         return 1;
     }
 
-    std::string topic;
-    error = client.get_config(TOPIC_CONFIG_KEY, std::nullopt, topic);
+    std::byte mem[256];
+    std::string_view topic;
+    error = client.get_config(
+        TOPIC_CONFIG_KEY, std::nullopt, std::span(mem), topic
+    );
     if (error) {
         std::cerr << "Failed to retrieve config value (" << error << ")\n";
         return 1;

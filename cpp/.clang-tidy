@@ -11,3 +11,4 @@ Checks:
   - bugprone-multi-level-implicit-pointer-conversion
   - bugprone-sizeof-container
   - clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling
+  - -readability-convert-member-functions-to-static

@@ -26,30 +26,6 @@ namespace gg::ipc {
 
 class Subscription;
 
-/// Heap-allocated object. The result of some IPC operations.
-class AllocatedObject {
-private:
-    std::unique_ptr<std::byte[]> arena;
-    Object head;
-
-public:
-    constexpr AllocatedObject() noexcept = default;
-
-    AllocatedObject(
-        const Object &head, std::unique_ptr<std::byte[]> &&arena
-    ) noexcept
-        : arena { std::move(arena) }
-        , head { head } {
-    }
-
-    AllocatedObject &operator=(AllocatedObject &&) noexcept = default;
-    AllocatedObject(AllocatedObject &&) noexcept = default;
-
-    constexpr Object get() const noexcept {
-        return head;
-    }
-};
-
 class AuthToken {
     std::string_view token;
 
@@ -146,13 +122,15 @@ public:
     std::error_code get_config(
         std::span<const Buffer> key_path,
         std::optional<std::string_view> component_name,
-        std::string &value
+        std::span<std::byte> value_mem,
+        std::string_view &value
     ) noexcept;
 
     std::error_code get_config(
         std::span<const Buffer> key_path,
         std::optional<std::string_view> component_name,
-        AllocatedObject &value
+        std::span<std::byte> value_mem,
+        Object &value
     ) noexcept;
 
     std::error_code get_config(
