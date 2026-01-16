@@ -493,15 +493,18 @@ impl Sdk {
     pub fn update_config<'a>(
         &self,
         key_path: &[&str],
-        timestamp: Option<(i64, i64)>,
+        timestamp: Option<core::time::Duration>,
         value_to_merge: impl Into<Object<'a>>,
     ) -> Result<()> {
         let value_to_merge = value_to_merge.into();
         let mut c_key_path_mem = [MaybeUninit::uninit(); MAX_KEY_PATH_LEN];
         let c_key_path = key_path_to_buf_list(key_path, &mut c_key_path_mem)?;
 
-        let timespec =
-            timestamp.map(|(tv_sec, tv_nsec)| c::timespec { tv_sec, tv_nsec });
+        #[expect(clippy::cast_possible_wrap)]
+        let timespec = timestamp.map(|d| c::timespec {
+            tv_sec: d.as_secs() as i64,
+            tv_nsec: i64::from(d.subsec_nanos()),
+        });
 
         Result::from(unsafe {
             c::ggipc_update_config(
