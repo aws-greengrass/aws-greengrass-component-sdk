@@ -5,9 +5,9 @@
 #ifndef GG_LIST_HPP
 #define GG_LIST_HPP
 
-#include <gg/error.hpp>
 #include <gg/utility.hpp>
 #include <cstddef>
+#include <system_error>
 #include <type_traits>
 
 extern "C" {
@@ -54,7 +54,7 @@ public:
     }
 
     // return GG_ERR_OK if all elements are of the specified type
-    GgError type_check(GgObjectType type) const noexcept;
+    std::error_code type_check(GgObjectType type) const noexcept;
 
     // element access
 
@@ -68,15 +68,7 @@ public:
         return operator[](size() - 1);
     }
 
-    reference at(size_type pos) const {
-        if (pos >= size()) {
-            GG_THROW_OR_ABORT(
-                gg::Exception(GG_ERR_RANGE, "gg::List::at: out of range")
-            );
-        }
-
-        return operator[](pos);
-    }
+    reference at(size_type pos) const;
 
     // UB if out of range
     reference operator[](size_type pos) const noexcept;
