@@ -112,7 +112,7 @@ namespace tests {
                     TEST_FAIL_MESSAGE("Exception caught from get_config");
                 }
 
-                auto map = gg::get_if<gg::Map>(&obj);
+                auto map = gg::get_if<gg::Map>(obj);
                 TEST_ASSERT_MESSAGE(
                     static_cast<bool>(map), "Result was not map"
                 );
@@ -128,7 +128,7 @@ namespace tests {
                     GG_TYPE_BUF, found->second->index(), "Value type mismatch"
                 );
 
-                auto buf = gg::get_if<gg::Buffer>(found->second);
+                auto buf = gg::get_if<gg::Buffer>(*found->second);
                 TEST_ASSERT_MESSAGE(
                     static_cast<bool>(buf), "Failed to get value"
                 );

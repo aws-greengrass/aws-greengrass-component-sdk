@@ -20,7 +20,6 @@
 #include <variant>
 
 extern "C" {
-#include <gg/object.h>
 #include <gg/types.h>
 }
 
@@ -28,6 +27,7 @@ namespace gg {
 
 template <class T>
 using is_object_alternative = std::disjunction<
+    std::is_same<T, std::monostate>,
     std::is_same<T, bool>,
     std::is_integral<T>,
     std::is_floating_point<T>,
@@ -66,27 +66,7 @@ public:
         );
     }
 
-    Variant to_variant() const noexcept {
-        switch (index()) {
-        case GG_TYPE_NULL:
-            return {};
-        case GG_TYPE_BOOLEAN:
-            return gg_obj_into_bool(*this);
-        case GG_TYPE_I64:
-            return gg_obj_into_i64(*this);
-        case GG_TYPE_F64:
-            return gg_obj_into_f64(*this);
-        case GG_TYPE_BUF: {
-            GgBuffer buf = gg_obj_into_buf(*this);
-            return std::span { buf.data, buf.len };
-        }
-        case GG_TYPE_LIST:
-            return gg_obj_into_list(*this);
-        case GG_TYPE_MAP:
-            return gg_obj_into_map(*this);
-        }
-        abort();
-    }
+    Variant to_variant() const noexcept;
 
     explicit Object(const Variant &variant) noexcept
         : Object { to_object(variant) } {
@@ -97,22 +77,22 @@ public:
 
     Object(std::monostate /*unused*/) noexcept { };
 
-    explicit Object(bool boolean) noexcept
-        : GgObject { gg_obj_bool(boolean) } {
-    }
+    explicit Object(bool boolean) noexcept;
 
     Object(std::integral auto i64) noexcept
         requires(!std::is_same_v<bool, std::remove_cv_t<decltype(i64)>>)
-        : GgObject { gg_obj_i64(static_cast<int64_t>(i64)) } {
+        : Object { static_cast<int64_t>(i64) } {
     }
+
+    Object(int64_t i64) noexcept;
 
     Object(std::floating_point auto f64) noexcept
-        : GgObject { gg_obj_f64(static_cast<double>(f64)) } {
+        : Object { static_cast<double>(f64) } {
     }
 
-    Object(gg::Buffer buffer) noexcept
-        : GgObject { gg_obj_buf(buffer) } {
-    }
+    Object(double f64) noexcept;
+
+    Object(gg::Buffer buffer) noexcept;
 
     Object(std::span<uint8_t> buffer) noexcept
         : Object { Buffer { buffer } } {
@@ -127,13 +107,9 @@ public:
         : Object { std::string_view { arr } } {
     }
 
-    Object(List list) noexcept
-        : GgObject { gg_obj_list(list) } {
-    }
+    Object(List list) noexcept;
 
-    Object(Map map) noexcept
-        : GgObject { gg_obj_map(map) } {
-    }
+    Object(Map map) noexcept;
 
     template <class T>
     Object &operator=(const T &value) noexcept
@@ -142,9 +118,7 @@ public:
         return *this = Object { value };
     }
 
-    GgObjectType index() const noexcept {
-        return gg_obj_type(*this);
-    }
+    GgObjectType index() const noexcept;
 
     // Assumes Object is a Map
     Object operator[](std::string_view key) const;
@@ -165,59 +139,46 @@ using is_buffer_type = std::disjunction<
     std::is_same<T, std::string_view>>;
 
 template <ObjectType T>
-constexpr GgObjectType index_for_type() noexcept {
+std::optional<T> get_if(Object obj) noexcept {
     using Type = std::remove_cvref_t<T>;
-    if constexpr (std::is_same_v<Type, bool>) {
-        return GG_TYPE_BOOLEAN;
-    } else if constexpr (std::is_integral_v<Type>) {
-        return GG_TYPE_I64;
+    if constexpr (std::is_integral_v<Type>) {
+        return get_if<int64_t>(obj);
     } else if constexpr (std::is_floating_point_v<Type>) {
-        return GG_TYPE_F64;
+        return get_if<double>(obj);
     } else if constexpr (is_buffer_type<Type>::value) {
-        return GG_TYPE_BUF;
-    } else if constexpr (std::is_same_v<Type, List>) {
-        return GG_TYPE_LIST;
-    } else if constexpr (std::is_same_v<Type, Map>) {
-        return GG_TYPE_MAP;
+        if (auto buf = get_if<std::span<uint8_t>>(obj); buf.has_value()) {
+            return T {
+                reinterpret_cast<typename T::pointer>(buf.value().data()),
+                buf.value().size()
+            };
+        }
+        return std::nullopt;
     } else {
-        return GG_TYPE_NULL;
+        static_assert(false, "should be unreachable");
     }
 }
 
-template <ObjectType T>
-std::optional<T> get_if(Object *obj) noexcept {
-    using Type = std::remove_cvref_t<T>;
-    if (obj == nullptr) {
-        return std::nullopt;
-    }
-    if (obj->index() != index_for_type<Type>()) {
-        return std::nullopt;
-    }
-    if constexpr (std::is_same_v<Type, bool>) {
-        return gg_obj_into_bool(*obj);
-    } else if constexpr (std::is_integral_v<Type>) {
-        return gg_obj_into_i64(*obj);
-    } else if constexpr (std::is_floating_point_v<Type>) {
-        return gg_obj_into_f64(*obj);
-    } else if constexpr (is_buffer_type<Type>::value) {
-        Buffer buf = gg_obj_into_buf(*obj);
-        return T { reinterpret_cast<typename T::pointer>(buf.data()),
-                   buf.size() };
-    } else if constexpr (std::is_same_v<Type, List>) {
-        return gg_obj_into_list(*obj);
-    } else if constexpr (std::is_same_v<Type, Map>) {
-        return gg_obj_into_map(*obj);
-    } else {
-        return T {};
-    }
-}
+template <>
+std::optional<std::monostate> get_if(Object obj) noexcept;
+template <>
+std::optional<bool> get_if(Object obj) noexcept;
+template <>
+std::optional<int64_t> get_if(Object obj) noexcept;
+template <>
+std::optional<double> get_if(Object obj) noexcept;
+template <>
+std::optional<std::span<uint8_t>> get_if(Object obj) noexcept;
+template <>
+std::optional<List> get_if(Object obj) noexcept;
+template <>
+std::optional<Map> get_if(Object obj) noexcept;
 
 template <ObjectType T>
 T get(Object obj) {
-    auto value = get_if<T>(&obj);
+    auto value = get_if<T>(obj);
     if (!value) {
         GG_THROW_OR_ABORT(
-            Exception { GG_ERR_PARSE, "get: Bad index for object." }
+            Exception { GG_ERR_INVALID, "get: Bad index for object." }
         );
     }
     return *value;

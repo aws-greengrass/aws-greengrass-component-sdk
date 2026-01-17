@@ -45,7 +45,7 @@ protected:
         if constexpr (std::is_same_v<T, Object>) {
             entry = *iter->second;
         } else {
-            auto value = get_if<T>(iter->second);
+            auto value = get_if<T>(*iter->second);
             if (!value) {
                 return GG_ERR_PARSE;
             }
