@@ -494,23 +494,30 @@ impl Sdk {
         timestamp: Option<core::time::Duration>,
         value_to_merge: impl Into<Object<'a>>,
     ) -> Result<()> {
-        let value_to_merge = value_to_merge.into();
-        let mut c_key_path_mem = [MaybeUninit::uninit(); MAX_KEY_PATH_LEN];
-        let c_key_path = key_path_to_buf_list(key_path, &mut c_key_path_mem)?;
+        fn inner(
+            key_path: &[&str],
+            timestamp: Option<core::time::Duration>,
+            value_to_merge: Object,
+        ) -> Result<()> {
+            let mut c_key_path_mem = [MaybeUninit::uninit(); MAX_KEY_PATH_LEN];
+            let c_key_path =
+                key_path_to_buf_list(key_path, &mut c_key_path_mem)?;
 
-        #[expect(clippy::cast_possible_wrap)]
-        let timespec = timestamp.map(|d| c::timespec {
-            tv_sec: d.as_secs() as i64,
-            tv_nsec: i64::from(d.subsec_nanos()),
-        });
+            #[expect(clippy::cast_possible_wrap)]
+            let timespec = timestamp.map(|d| c::timespec {
+                tv_sec: d.as_secs() as i64,
+                tv_nsec: i64::from(d.subsec_nanos()),
+            });
 
-        Result::from(unsafe {
-            c::ggipc_update_config(
-                c_key_path,
-                timespec.as_ref().map_or(ptr::null(), ptr::from_ref),
-                *ptr::from_ref(&value_to_merge).cast::<c::GgObject>(),
-            )
-        })
+            Result::from(unsafe {
+                c::ggipc_update_config(
+                    c_key_path,
+                    timespec.as_ref().map_or(ptr::null(), ptr::from_ref),
+                    *ptr::from_ref(&value_to_merge).cast::<c::GgObject>(),
+                )
+            })
+        }
+        inner(key_path, timestamp, value_to_merge.into())
     }
 
     /// Update component state.
