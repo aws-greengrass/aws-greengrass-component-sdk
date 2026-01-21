@@ -5,6 +5,7 @@
 #include <gg/eventstream/rpc.h> // IWYU pragma: keep
 #include <gg/ipc/mock.h>
 #include <gg/log.h>
+#include <gg/types.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -109,6 +110,10 @@ GgipcPacket gg_test_config_get_object_accepted_packet(
 
 /// server->client generic ServiceError response
 GgipcPacket gg_test_ipc_service_error_packet(int32_t stream_id);
+
+GgipcPacket gg_test_ipc_error_packet(
+    int32_t stream_id, GgBuffer error_code, GgBuffer message
+);
 
 /// client->server PublishToIotCore request
 GgipcPacket gg_test_mqtt_publish_request_packet(

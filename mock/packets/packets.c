@@ -6,12 +6,12 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-GgipcPacket gg_test_ipc_service_error_packet(int32_t stream_id) {
-    static GgKV pairs[3];
-    pairs[0] = gg_kv(GG_STR("_errorCode"), gg_obj_buf(GG_STR("ServiceError")));
-    pairs[1] = gg_kv(
-        GG_STR("_message"), gg_obj_buf(GG_STR("Unknown service model."))
-    );
+GgipcPacket gg_test_ipc_error_packet(
+    int32_t stream_id, GgBuffer error_code, GgBuffer message
+) {
+    static GgKV pairs[2];
+    pairs[0] = gg_kv(GG_STR("_errorCode"), gg_obj_buf(error_code));
+    pairs[1] = gg_kv(GG_STR("_message"), gg_obj_buf(message));
 
     size_t pairs_len = sizeof(pairs) / sizeof(pairs[0]);
 
@@ -32,4 +32,10 @@ GgipcPacket gg_test_ipc_service_error_packet(int32_t stream_id) {
                 .string = GG_STR("aws.greengrass#ServiceError") } } },
         .header_count = GG_IPC_REQUEST_HEADERS_COUNT
     };
+}
+
+GgipcPacket gg_test_ipc_service_error_packet(int32_t stream_id) {
+    return gg_test_ipc_error_packet(
+        stream_id, GG_STR("ServiceError"), GG_STR("Unknown service model.")
+    );
 }

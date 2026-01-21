@@ -2,7 +2,9 @@
 #include "gg/ipc/packet_sequences.h"
 #include "packets/packets.h"
 #include <assert.h>
+#include <gg/buffer.h>
 #include <gg/map.h>
+#include <gg/types.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -96,5 +98,42 @@ GgipcPacketSequence gg_test_config_get_object_sequence(
     GgipcPacket response = gg_test_config_get_object_accepted_packet(
         stream_id, component_name, last_key, value
     );
+    return (GgipcPacketSequence) { .packets = { request, response }, .len = 2 };
+}
+
+GgipcPacketSequence gg_test_config_get_not_found_sequence(int32_t stream_id) {
+    GgipcPacket request = gg_test_config_get_object_request_packet(
+        stream_id, GG_BUF_LIST(), NULL
+    );
+
+    GgipcPacket response = gg_test_ipc_error_packet(
+        stream_id,
+        GG_STR("ResourceNotFoundError"),
+        GG_STR("No such key found in config")
+    );
+
+    return (GgipcPacketSequence) { .packets = { request, response }, .len = 2 };
+}
+
+// missing payload object
+static GgipcPacket config_bad_empty_response(int32_t stream_id) {
+    return (GgipcPacket) { .direction = SERVER_TO_CLIENT,
+                           .has_payload = true,
+                           .payload = gg_obj_map((GgMap) {}),
+                           .headers = GG_IPC_ACCEPTED_HEADERS(
+                               stream_id, "aws.greengrass#GetConfiguration"
+                           ),
+                           .header_count = GG_IPC_ACCEPTED_HEADERS_COUNT };
+}
+
+GgipcPacketSequence gg_test_config_bad_server_response_sequence(
+    int32_t stream_id
+) {
+    GgipcPacket request = gg_test_config_get_object_request_packet(
+        stream_id, GG_BUF_LIST(), NULL
+    );
+
+    GgipcPacket response = config_bad_empty_response(stream_id);
+
     return (GgipcPacketSequence) { .packets = { request, response }, .len = 2 };
 }
