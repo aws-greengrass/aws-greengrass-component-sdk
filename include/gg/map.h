@@ -38,6 +38,8 @@ bool gg_map_get_path(GgMap map, GgBufList path, GgObject **result);
 /// Sorts and removes duplicates from the top-level keys of the map
 void gg_map_canonicalize_shallow(GgMap *map);
 
+/// Returns whether the map's keys are canonical. Does not recursively check
+/// contained values.
 bool gg_map_is_canonical(GgMap map);
 
 /// Construct a GgKV.
