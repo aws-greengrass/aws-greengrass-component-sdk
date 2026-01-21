@@ -101,7 +101,7 @@ CONST
 GgList gg_obj_into_list(GgObject list);
 
 /// Calculate max memory needed to claim an object.
-/// This is the max memory used by gg_arena_claim_obj on this object.
+/// This is the max memory needed to store this object contiguously.
 /// On success, sets `size` to the calculated memory requirement.
 /// Returns GG_ERR_OK on success.
 ACCESS(write_only, 2) REPRODUCIBLE
