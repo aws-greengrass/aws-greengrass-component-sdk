@@ -32,6 +32,13 @@ __attribute__((weak)) void gg_test_abort(void) {
             (int) getpid(),
             (int) Unity.CurrentTestFailed
         );
+
+#ifdef ENABLE_COVERAGE
+        // NOLINTNEXTLINE(readability-identifier-naming)
+        extern void __gcov_dump(void);
+        // call gcov's at_exit() handler when fast exiting.
+        __gcov_dump();
+#endif
         // allow TEST_PASS() to _Exit(0);
         _Exit((int) Unity.CurrentTestFailed);
     }
