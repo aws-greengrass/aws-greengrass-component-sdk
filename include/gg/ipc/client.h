@@ -55,17 +55,9 @@ GgError ggipc_publish_to_topic_json(GgBuffer topic, GgMap payload);
 /// Publish a binary message to a local pub/sub topic.
 /// Sends messages to other Greengrass components subscribed to the topic.
 /// Requires aws.greengrass#PublishToTopic authorization.
-/// Usage may incur memory overhead over using `ggipc_publish_to_topic_b64`
 /// See:
 /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-publish-subscribe.html#ipc-operation-publishtotopic>
 GgError ggipc_publish_to_topic_binary(GgBuffer topic, GgBuffer payload);
-
-/// Publish a binary message to a local pub/sub topic.
-/// Payload must be already base64 encoded.
-/// Requires aws.greengrass#PublishToTopic authorization.
-/// See:
-/// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-publish-subscribe.html#ipc-operation-publishtotopic>
-GgError ggipc_publish_to_topic_binary_b64(GgBuffer topic, GgBuffer b64_payload);
 
 typedef void GgIpcSubscribeToTopicCallback(
     void *ctx, GgBuffer topic, GgObject payload, GgIpcSubscriptionHandle handle
@@ -88,20 +80,10 @@ GgError ggipc_subscribe_to_topic(
 /// Publish an MQTT message to AWS IoT Core.
 /// Sends messages to AWS IoT Core MQTT broker with specified QoS.
 /// Requires aws.greengrass#PublishToIoTCore authorization.
-/// Usage may incur memory overhead over using `ggipc_publish_to_iot_core_b64`
 /// See:
 /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-iot-core-mqtt.html#ipc-operation-publishtoiotcore>
 GgError ggipc_publish_to_iot_core(
     GgBuffer topic_name, GgBuffer payload, uint8_t qos
-);
-
-/// Publish an MQTT message to AWS IoT Core.
-/// Payload must be already base64 encoded.
-/// Requires aws.greengrass#PublishToIoTCore authorization.
-/// See:
-/// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-iot-core-mqtt.html#ipc-operation-publishtoiotcore>
-GgError ggipc_publish_to_iot_core_b64(
-    GgBuffer topic_name, GgBuffer b64_payload, uint8_t qos
 );
 
 typedef void GgIpcSubscribeToIotCoreCallback(

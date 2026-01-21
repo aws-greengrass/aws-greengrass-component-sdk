@@ -2,7 +2,11 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#include "b64_encode_mem.h"
+#include <gg/arena.h>
+#include <gg/base64.h>
 #include <gg/buffer.h>
+#include <gg/cleanup.h>
 #include <gg/error.h>
 #include <gg/ipc/client.h>
 #include <gg/ipc/client_raw.h>
@@ -52,9 +56,22 @@ GgError ggipc_publish_to_topic_json(GgBuffer topic, GgMap payload) {
     return publish_to_topic_common(topic, publish_message);
 }
 
-GgError ggipc_publish_to_topic_binary_b64(
-    GgBuffer topic, GgBuffer b64_payload
-) {
+GgError ggipc_publish_to_topic_binary(GgBuffer topic, GgBuffer payload) {
+    GG_MTX_SCOPE_GUARD(&gg_ipc_b64_encode_mtx);
+    GgArena arena = gg_arena_init(GG_BUF(gg_ipc_b64_encode_mem));
+
+    GgBuffer b64_payload;
+    GgError ret = gg_base64_encode(payload, &arena, &b64_payload);
+    if (ret != GG_ERR_OK) {
+        GG_LOGE(
+            "Insufficient memory provided to base64 encode PublishToTopic payload (required %zu, provided %" PRIu32
+            ").",
+            ((payload.len + 2) / 3) * 4,
+            arena.capacity - arena.index
+        );
+        return ret;
+    }
+
     GgMap binary_message
         = GG_MAP(gg_kv(GG_STR("message"), gg_obj_buf(b64_payload)));
     GgMap publish_message

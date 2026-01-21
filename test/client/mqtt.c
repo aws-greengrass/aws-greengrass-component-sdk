@@ -88,39 +88,6 @@ GG_TEST_DEFINE(publish_to_iot_core_bad_alloc) {
     GG_TEST_ASSERT_OK(gg_process_wait(pid));
 }
 
-GG_TEST_DEFINE(publish_to_iot_core_b64_okay) {
-    GgBuffer payload_base64 = payloads[0].payload_base64;
-
-    pid_t pid = fork();
-    TEST_ASSERT_TRUE_MESSAGE(pid >= 0, "fork failed");
-
-    if (pid == 0) {
-        gg_sdk_init();
-        GG_TEST_ASSERT_OK(ggipc_connect());
-        GG_TEST_ASSERT_OK(
-            ggipc_publish_to_iot_core_b64(GG_STR("my/topic"), payload_base64, 0)
-        );
-        TEST_PASS();
-    }
-
-    GG_TEST_ASSERT_OK(gg_test_accept_client(1));
-
-    GG_TEST_ASSERT_OK(gg_test_expect_packet_sequence(
-        gg_test_connect_accepted_sequence(gg_test_get_auth_token()), 5
-    ));
-
-    GG_TEST_ASSERT_OK(gg_test_expect_packet_sequence(
-        gg_test_mqtt_publish_accepted_sequence(
-            1, GG_STR("my/topic"), payload_base64, GG_STR("0")
-        ),
-        5
-    ));
-
-    GG_TEST_ASSERT_OK(gg_test_wait_for_client_disconnect(1));
-
-    GG_TEST_ASSERT_OK(gg_process_wait(pid));
-}
-
 GG_TEST_DEFINE(publish_to_iot_core_rejected) {
     GgBuffer payload = payloads[0].payload;
 
