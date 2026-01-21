@@ -405,11 +405,9 @@ impl Sdk {
             len: name.len(),
         });
 
-        let mut arena = unsafe {
-            c::gg_arena_init(c::GgBuffer {
-                data: result_mem.as_mut_ptr().cast::<u8>(),
-                len: result_mem.len(),
-            })
+        let mem = c::GgBuffer {
+            data: result_mem.as_mut_ptr().cast::<u8>(),
+            len: result_mem.len(),
         };
 
         let mut obj = c::GgObject::default();
@@ -418,7 +416,7 @@ impl Sdk {
             c::ggipc_get_config(
                 c_key_path,
                 component_buf.as_ref().map_or(ptr::null(), ptr::from_ref),
-                &raw mut arena,
+                mem,
                 &raw mut obj,
             )
         })?;

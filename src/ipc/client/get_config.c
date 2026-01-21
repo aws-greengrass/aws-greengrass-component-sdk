@@ -101,7 +101,7 @@ static GgError get_resp_value(
 
 typedef struct {
     GgObject *value;
-    GgArena *alloc;
+    GgBuffer mem;
     GgBuffer *final_key;
 } CopyObjectCtx;
 
@@ -115,7 +115,8 @@ static GgError copy_config_obj(void *ctx, GgMap result) {
     }
 
     if (copy_ctx->value != NULL) {
-        ret = gg_arena_claim_obj(value, copy_ctx->alloc);
+        GgArena arena = gg_arena_init(copy_ctx->mem);
+        ret = gg_arena_claim_obj(value, &arena);
         if (ret != GG_ERR_OK) {
             GG_LOGE("Insufficent memory provided for response.");
             return ret;
@@ -130,7 +131,7 @@ static GgError copy_config_obj(void *ctx, GgMap result) {
 GgError ggipc_get_config(
     GgBufList key_path,
     const GgBuffer *component_name,
-    GgArena *alloc,
+    GgBuffer value_mem,
     GgObject *value
 ) {
     if (value != NULL) {
@@ -139,7 +140,7 @@ GgError ggipc_get_config(
 
     CopyObjectCtx response_ctx
         = { .value = value,
-            .alloc = alloc,
+            .mem = value_mem,
             .final_key
             = (key_path.len == 0) ? NULL : &key_path.bufs[key_path.len - 1] };
     return ggipc_get_config_common(

@@ -1,6 +1,5 @@
 //! Sample component demonstrating reading/writing component config
 
-#include <gg/arena.h>
 #include <gg/buffer.h>
 #include <gg/error.h>
 #include <gg/ipc/client.h>
@@ -50,12 +49,11 @@ int main(void) {
         );
     }
 
-    GgArena key2_map_arena = gg_arena_init(GG_BUF(response_mem));
     GgObject key2_map_obj;
     ret = ggipc_get_config(
         GG_BUF_LIST(GG_STR("sample_map"), GG_STR("key2_map")),
         NULL,
-        &key2_map_arena,
+        GG_BUF(response_mem),
         &key2_map_obj
     );
     if (ret == GG_ERR_OK && gg_obj_type(key2_map_obj) == GG_TYPE_MAP) {
@@ -77,12 +75,11 @@ int main(void) {
         }
     }
 
-    GgArena key3_arena = gg_arena_init(GG_BUF(response_mem));
     GgObject key3_obj;
     ret = ggipc_get_config(
         GG_BUF_LIST(GG_STR("sample_map"), GG_STR("key3")),
         NULL,
-        &key3_arena,
+        GG_BUF(response_mem),
         &key3_obj
     );
     if (ret == GG_ERR_OK && gg_obj_type(key3_obj) == GG_TYPE_I64) {
@@ -102,11 +99,10 @@ int main(void) {
     }
 
     while (true) {
-        GgArena resp_arena = gg_arena_init(GG_BUF(response_mem));
         GgObject resp;
 
         ret = ggipc_get_config(
-            GG_BUF_LIST(GG_STR("test_num")), NULL, &resp_arena, &resp
+            GG_BUF_LIST(GG_STR("test_num")), NULL, GG_BUF(response_mem), &resp
         );
         if (ret != GG_ERR_OK) {
             fprintf(stderr, "Failed to call get_config for test_num.\n");

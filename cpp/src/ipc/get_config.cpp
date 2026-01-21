@@ -12,7 +12,6 @@
 #include <system_error>
 
 extern "C" {
-#include <gg/arena.h>
 #include <gg/ipc/client.h>
 }
 
@@ -49,16 +48,12 @@ std::error_code Client::get_config(
     Object &value
 ) noexcept {
     Buffer comp_name_buf { component_name.value_or(std::string_view {}) };
-    GgArena arena = gg_arena_init(
-        { .data = reinterpret_cast<uint8_t *>(value_mem.data()),
-          .len = value_mem.size() }
-    );
     GgObject result;
     GgError ret = ggipc_get_config(
         { .bufs = const_cast<Buffer *>(key_path.data()),
           .len = key_path.size() },
         component_name.has_value() ? &comp_name_buf : nullptr,
-        &arena,
+        Buffer { value_mem },
         &result
     );
     if (ret != GgError::GG_ERR_OK) {

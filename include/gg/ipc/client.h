@@ -5,12 +5,12 @@
 #ifndef GG_IPC_CLIENT_H
 #define GG_IPC_CLIENT_H
 
-#include <gg/arena.h>
 #include <gg/attr.h>
 #include <gg/buffer.h>
 #include <gg/error.h>
 #include <gg/ipc/types.h>
 #include <gg/object.h>
+#include <gg/types.h>
 #include <stdint.h>
 
 struct timespec;
@@ -125,14 +125,17 @@ GgError ggipc_subscribe_to_iot_core(
 /// Get component configuration value.
 /// Retrieves configuration for the specified key path.
 /// Pass empty list for complete config.
+/// If `value` is not NULL, `value_mem` must have enough memory to hold the
+/// output value, and on success, the result will be written to `value`.
+/// `value_mem` must remain valid and unmodified directly while `value` is used.
 /// Requires aws.greengrass#GetConfiguration authorization.
 /// See:
 /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-component-configuration.html#ipc-operation-getconfiguration>
-ACCESS(read_only, 2) ACCESS(read_write, 3) ACCESS(write_only, 4)
+ACCESS(read_only, 2) ACCESS(write_only, 4)
 GgError ggipc_get_config(
     GgBufList key_path,
     const GgBuffer *component_name,
-    GgArena *alloc,
+    GgBuffer value_mem,
     GgObject *value
 );
 

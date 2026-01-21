@@ -143,7 +143,6 @@ GG_TEST_DEFINE(get_configuration_map_okay) {
         = gg_obj_map(GG_MAP(gg_kv(GG_STR("key"), gg_obj_buf(GG_STR("value")))));
 
     uint8_t mem[64];
-    GgArena config_arena = gg_arena_init(GG_BUF(mem));
 
     GgBufList key_path = GG_BUF_LIST(GG_STR("key"), GG_STR("path"));
 
@@ -157,7 +156,7 @@ GG_TEST_DEFINE(get_configuration_map_okay) {
         GG_TEST_ASSERT_OK(ggipc_connect());
         GgObject actual_object = GG_OBJ_NULL;
         GG_TEST_ASSERT_OK(ggipc_get_config(
-            key_path, &component_name, &config_arena, &actual_object
+            key_path, &component_name, GG_BUF(mem), &actual_object
         ));
 
         GG_TEST_ASSERT_OBJ_EQUAL(
@@ -194,7 +193,8 @@ GG_TEST_DEFINE(get_configuration_not_found) {
         gg_sdk_init();
         GG_TEST_ASSERT_OK(ggipc_connect());
         TEST_ASSERT_EQUAL(
-            GG_ERR_NOENTRY, ggipc_get_config(GG_BUF_LIST(), NULL, NULL, NULL)
+            GG_ERR_NOENTRY,
+            ggipc_get_config(GG_BUF_LIST(), NULL, (GgBuffer) {}, NULL)
         );
 
         TEST_PASS();
@@ -241,7 +241,9 @@ GG_TEST_DEFINE(get_configuration_key_path_too_long) {
     if (pid == 0) {
         gg_sdk_init();
         GG_TEST_ASSERT_OK(ggipc_connect());
-        GG_TEST_ASSERT_BAD(ggipc_get_config(key_path, NULL, NULL, NULL));
+        GG_TEST_ASSERT_BAD(
+            ggipc_get_config(key_path, NULL, (GgBuffer) {}, NULL)
+        );
 
         TEST_PASS();
     }
@@ -262,7 +264,6 @@ GG_TEST_DEFINE(get_configuration_obj_cant_allocate) {
         = gg_obj_map(GG_MAP(gg_kv(GG_STR("key"), gg_obj_buf(GG_STR("value")))));
 
     uint8_t mem[1];
-    GgArena config_arena = gg_arena_init(GG_BUF(mem));
 
     GgBufList key_path = GG_BUF_LIST(GG_STR("key"), GG_STR("path"));
 
@@ -276,7 +277,7 @@ GG_TEST_DEFINE(get_configuration_obj_cant_allocate) {
         GG_TEST_ASSERT_OK(ggipc_connect());
         GgObject actual_object = GG_OBJ_NULL;
         GG_TEST_ASSERT_BAD(ggipc_get_config(
-            key_path, &component_name, &config_arena, &actual_object
+            key_path, &component_name, GG_BUF(mem), &actual_object
         ));
 
         TEST_PASS();
@@ -307,7 +308,9 @@ GG_TEST_DEFINE(get_configuration_bad_server_response) {
     if (pid == 0) {
         gg_sdk_init();
         GG_TEST_ASSERT_OK(ggipc_connect());
-        GG_TEST_ASSERT_BAD(ggipc_get_config(GG_BUF_LIST(), NULL, NULL, NULL));
+        GG_TEST_ASSERT_BAD(
+            ggipc_get_config(GG_BUF_LIST(), NULL, (GgBuffer) {}, NULL)
+        );
 
         TEST_PASS();
     }
