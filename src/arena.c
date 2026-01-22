@@ -176,7 +176,6 @@ static GgError claim_map(void *ctx, GgMap val, GgObject obj[static 1]) {
     }
     if (val.len == 0) {
         *obj = gg_obj_map((GgMap) { 0 });
-        val.pairs = NULL;
         return GG_ERR_OK;
     }
 

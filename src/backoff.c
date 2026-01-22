@@ -45,7 +45,7 @@ GgError gg_backoff(
 
     uint32_t current_max_ms = base_ms;
     uint32_t attempts = 0;
-    GgError ret = GG_ERR_FAILURE;
+    GgError ret;
 
     while (true) {
         ret = fn(ctx);

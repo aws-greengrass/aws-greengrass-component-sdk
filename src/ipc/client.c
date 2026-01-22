@@ -567,7 +567,6 @@ GgError ggipc_subscribe(
     };
 
     uint16_t stream_index;
-    int32_t stream_id = -1;
 
     GG_MTX_SCOPE_GUARD(&stream_state_mtx);
 
@@ -579,7 +578,7 @@ GgError ggipc_subscribe(
 
     static int32_t next_stream_id = 1;
 
-    stream_id = next_stream_id++;
+    int32_t stream_id = next_stream_id++;
 
     set_stream_index(
         stream_index,
