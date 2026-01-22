@@ -46,7 +46,12 @@ cmake -B build -D CMAKE_BUILD_TYPE=MinSizeRel -D BUILD_SAMPLES=OFF
 make -C build -j$(nproc)
 ```
 
-The library will be available at `./build/libgg-sdk.a`.
+The C library will be available at `./build/libgg-sdk.a` and C++ bindings at
+`./build/cpp/libgg-sdk++.a`.
+
+## Building only C
+
+The `-D BUILD_CPP=OFF` option can be used to not build the C++ bindings.
 
 ## Adding to a CMake project
 
