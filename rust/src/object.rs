@@ -97,13 +97,12 @@ impl<'a> Object<'a> {
     /// assert!(matches!(obj.unpack(), UnpackedObject::Buf("borrowed")));
     /// ```
     #[must_use]
-    pub fn buf(buf: impl Into<&'a str>) -> Self {
-        let s = buf.into();
+    pub fn buf(buf: &'a str) -> Self {
         Self {
             c: unsafe {
                 c::gg_obj_buf(c::GgBuffer {
-                    data: s.as_ptr().cast_mut(),
-                    len: s.len(),
+                    data: buf.as_ptr().cast_mut(),
+                    len: buf.len(),
                 })
             },
             phantom: PhantomData,
@@ -124,13 +123,12 @@ impl<'a> Object<'a> {
     /// }
     /// ```
     #[must_use]
-    pub fn list(list: impl Into<&'a [Object<'a>]>) -> Self {
-        let slice = list.into();
+    pub fn list(list: &'a [Object<'a>]) -> Self {
         Self {
             c: unsafe {
                 c::gg_obj_list(c::GgList {
-                    items: slice.as_ptr().cast_mut().cast::<c::GgObject>(),
-                    len: slice.len(),
+                    items: list.as_ptr().cast_mut().cast::<c::GgObject>(),
+                    len: list.len(),
                 })
             },
             phantom: PhantomData,
@@ -151,13 +149,12 @@ impl<'a> Object<'a> {
     /// }
     /// ```
     #[must_use]
-    pub fn map(map: impl Into<&'a [Kv<'a>]>) -> Self {
-        let slice = map.into();
+    pub fn map(map: &'a [Kv<'a>]) -> Self {
         Self {
             c: unsafe {
                 c::gg_obj_map(c::GgMap {
-                    pairs: slice.as_ptr().cast_mut().cast::<c::GgKV>(),
-                    len: slice.len(),
+                    pairs: map.as_ptr().cast_mut().cast::<c::GgKV>(),
+                    len: map.len(),
                 })
             },
             phantom: PhantomData,
@@ -323,14 +320,14 @@ impl<'a> Kv<'a> {
     /// let kv = Kv::new("key", Object::i64(10));
     /// assert_eq!(kv.key(), "key");
     /// ```
-    pub fn new(key: impl Into<&'a str>, value: Object<'a>) -> Self {
-        let s = key.into();
+    #[must_use]
+    pub fn new(key: &'a str, value: Object<'a>) -> Self {
         Self {
             c: unsafe {
                 c::gg_kv(
                     c::GgBuffer {
-                        data: s.as_ptr().cast_mut(),
-                        len: s.len(),
+                        data: key.as_ptr().cast_mut(),
+                        len: key.len(),
                     },
                     value.c,
                 )
@@ -410,8 +407,7 @@ impl Map<'_> {
     /// assert!(matches!(val.unpack(), UnpackedObject::I64(2)));
     /// ```
     #[must_use]
-    pub fn get<'b>(&self, key: impl Into<&'b str>) -> Option<&Object<'_>> {
-        let key = key.into();
+    pub fn get(&self, key: &str) -> Option<&Object<'_>> {
         let map = c::GgMap {
             pairs: self.0.as_ptr().cast_mut().cast::<c::GgKV>(),
             len: self.0.len(),

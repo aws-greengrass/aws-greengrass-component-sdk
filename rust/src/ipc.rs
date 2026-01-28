@@ -142,26 +142,23 @@ impl Sdk {
     ///
     /// # Errors
     /// Returns error if publish fails.
-    pub fn publish_to_topic_json<'a>(
+    pub fn publish_to_topic_json(
         &self,
-        topic: impl Into<&'a str>,
-        payload: impl Into<Map<'a>>,
+        topic: &str,
+        payload: &[Kv<'_>],
     ) -> Result<()> {
-        fn inner(topic: &str, payload: &Map<'_>) -> Result<()> {
-            let topic_buf = c::GgBuffer {
-                data: topic.as_ptr().cast_mut(),
-                len: topic.len(),
-            };
-            let payload_map = c::GgMap {
-                pairs: payload.0.as_ptr() as *mut c::GgKV,
-                len: payload.0.len(),
-            };
+        let topic_buf = c::GgBuffer {
+            data: topic.as_ptr().cast_mut(),
+            len: topic.len(),
+        };
+        let payload_map = c::GgMap {
+            pairs: payload.as_ptr() as *mut c::GgKV,
+            len: payload.len(),
+        };
 
-            Result::from(unsafe {
-                c::ggipc_publish_to_topic_json(topic_buf, payload_map)
-            })
-        }
-        inner(topic.into(), &payload.into())
+        Result::from(unsafe {
+            c::ggipc_publish_to_topic_json(topic_buf, payload_map)
+        })
     }
 
     /// Publish a binary message to a local pub/sub topic.
@@ -186,26 +183,23 @@ impl Sdk {
     ///
     /// # Errors
     /// Returns error if publish fails.
-    pub fn publish_to_topic_binary<'a>(
+    pub fn publish_to_topic_binary(
         &self,
-        topic: impl Into<&'a str>,
-        payload: impl AsRef<[u8]>,
+        topic: &str,
+        payload: &[u8],
     ) -> Result<()> {
-        fn inner(topic: &str, payload: &[u8]) -> Result<()> {
-            let topic_buf = c::GgBuffer {
-                data: topic.as_ptr().cast_mut(),
-                len: topic.len(),
-            };
-            let payload_buf = c::GgBuffer {
-                data: payload.as_ptr().cast_mut(),
-                len: payload.len(),
-            };
+        let topic_buf = c::GgBuffer {
+            data: topic.as_ptr().cast_mut(),
+            len: topic.len(),
+        };
+        let payload_buf = c::GgBuffer {
+            data: payload.as_ptr().cast_mut(),
+            len: payload.len(),
+        };
 
-            Result::from(unsafe {
-                c::ggipc_publish_to_topic_binary(topic_buf, payload_buf)
-            })
-        }
-        inner(topic.into(), payload.as_ref())
+        Result::from(unsafe {
+            c::ggipc_publish_to_topic_binary(topic_buf, payload_buf)
+        })
     }
 
     /// Subscribe to messages on a local pub/sub topic.
@@ -219,7 +213,7 @@ impl Sdk {
     /// Returns error if subscription fails.
     pub fn subscribe_to_topic<'a, F: Fn(&str, SubscribeToTopicPayload)>(
         &self,
-        topic: impl Into<&'a str>,
+        topic: &str,
         callback: &'a F,
     ) -> Result<Subscription<'a, F>> {
         extern "C" fn trampoline<F: Fn(&str, SubscribeToTopicPayload)>(
@@ -254,7 +248,6 @@ impl Sdk {
             cb(topic_str, unpacked);
         }
 
-        let topic = topic.into();
         let topic_buf = c::GgBuffer {
             data: topic.as_ptr().cast_mut(),
             len: topic.len(),
@@ -301,27 +294,24 @@ impl Sdk {
     ///
     /// # Errors
     /// Returns error if publish fails.
-    pub fn publish_to_iot_core<'a>(
+    pub fn publish_to_iot_core(
         &self,
-        topic: impl Into<&'a str>,
-        payload: impl AsRef<[u8]>,
+        topic: &str,
+        payload: &[u8],
         qos: Qos,
     ) -> Result<()> {
-        fn inner(topic: &str, payload: &[u8], qos: Qos) -> Result<()> {
-            let topic_buf = c::GgBuffer {
-                data: topic.as_ptr().cast_mut(),
-                len: topic.len(),
-            };
-            let payload_buf = c::GgBuffer {
-                data: payload.as_ptr().cast_mut(),
-                len: payload.len(),
-            };
+        let topic_buf = c::GgBuffer {
+            data: topic.as_ptr().cast_mut(),
+            len: topic.len(),
+        };
+        let payload_buf = c::GgBuffer {
+            data: payload.as_ptr().cast_mut(),
+            len: payload.len(),
+        };
 
-            Result::from(unsafe {
-                c::ggipc_publish_to_iot_core(topic_buf, payload_buf, qos as u8)
-            })
-        }
-        inner(topic.into(), payload.as_ref(), qos)
+        Result::from(unsafe {
+            c::ggipc_publish_to_iot_core(topic_buf, payload_buf, qos as u8)
+        })
     }
 
     /// Subscribe to MQTT messages from AWS IoT Core.
@@ -335,7 +325,7 @@ impl Sdk {
     /// Returns error if subscription fails.
     pub fn subscribe_to_iot_core<'a, F: Fn(&str, &[u8])>(
         &self,
-        topic_filter: impl Into<&'a str>,
+        topic_filter: &str,
         qos: Qos,
         callback: &'a F,
     ) -> Result<Subscription<'a, F>> {
@@ -356,7 +346,6 @@ impl Sdk {
             cb(topic_str, payload_bytes);
         }
 
-        let topic_filter = topic_filter.into();
         let topic_buf = c::GgBuffer {
             data: topic_filter.as_ptr().cast_mut(),
             len: topic_filter.len(),
@@ -561,19 +550,13 @@ impl Sdk {
     ///
     /// # Errors
     /// Returns error if restart fails.
-    pub fn restart_component<'a>(
-        &self,
-        component_name: impl Into<&'a str>,
-    ) -> Result<()> {
-        fn inner(component_name: &str) -> Result<()> {
-            let component_buf = c::GgBuffer {
-                data: component_name.as_ptr().cast_mut(),
-                len: component_name.len(),
-            };
+    pub fn restart_component(&self, component_name: &str) -> Result<()> {
+        let component_buf = c::GgBuffer {
+            data: component_name.as_ptr().cast_mut(),
+            len: component_name.len(),
+        };
 
-            Result::from(unsafe { c::ggipc_restart_component(component_buf) })
-        }
-        inner(component_name.into())
+        Result::from(unsafe { c::ggipc_restart_component(component_buf) })
     }
 
     /// Subscribe to component configuration updates.
