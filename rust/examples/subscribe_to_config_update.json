@@ -1,0 +1,33 @@
+{
+  "RecipeFormatVersion": "2020-01-25",
+  "ComponentName": "com.example.SubscribeToConfigurationUpdateRust",
+  "ComponentVersion": "1.0.0",
+  "ComponentDescription": "A component that subscribes to configuration updates.",
+  "ComponentPublisher": "Amazon",
+  "ComponentConfiguration": {
+    "DefaultConfiguration": {
+      "mqtt": {
+        "port": 8883
+      }
+    }
+  },
+  "Manifests": [
+    {
+      "Platform": {
+        "os": "linux",
+        "runtime": "*"
+      },
+      "Lifecycle": {
+        "run": "{artifacts:path}/subscribe_to_config_update"
+      },
+      "Artifacts": [
+        {
+          "URI": "s3://amzn-s3-demo-bucket/artifacts/com.example.SubscribeToConfigurationUpdateRust/1.0.0/subscribe_to_config_update",
+          "Permission": {
+            "Execute": "OWNER"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,22 +1,17 @@
-use std::{thread, time::Duration};
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+// Example: Update component state
 
 use gg_sdk::{ComponentState, Sdk};
 
 fn main() {
     let sdk = Sdk::init();
-    sdk.connect().expect("Failed to connect to GG nucleus");
-    println!("Connected to GG nucleus.");
+    sdk.connect().expect("Failed to establish IPC connection");
 
-    println!("Sleeping for 10 seconds");
-    thread::sleep(Duration::from_secs(10));
-
-    println!("Updating component state to RUNNING.");
+    // Update component state to RUNNING
     sdk.update_state(ComponentState::Running)
         .expect("Failed to update component state");
 
-    println!("Component state updated successfully");
-
-    loop {
-        thread::sleep(Duration::from_secs(600));
-    }
+    println!("Successfully updated component state to RUNNING.");
 }

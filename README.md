@@ -55,10 +55,14 @@ C samples:
 
 Rust samples:
 
-- [IoT Core MQTT Pub/Sub](rust/examples/iot_core_mqtt.rs)
+- [Publish to IoT Core](rust/examples/publish_to_iot_core.rs)
+- [Subscribe to IoT Core](rust/examples/subscribe_to_iot_core.rs)
+- [Publish to Topic](rust/examples/publish_to_topic.rs)
+- [Subscribe to Topic](rust/examples/subscribe_to_topic.rs)
+- [Get Configuration](rust/examples/get_configuration.rs)
+- [Update Configuration](rust/examples/update_configuration.rs)
+- [Subscribe to Configuration Update](rust/examples/subscribe_to_config_update.rs)
 - [Update State](rust/examples/update_state.rs)
-- [Configuration Operations](rust/examples/config.rs)
-- [Subscribe To Configuration Update](rust/examples/subscribe_to_configuration_update.rs)
 - [Restart Component](rust/examples/restart_component.rs)
 
 C++ samples:

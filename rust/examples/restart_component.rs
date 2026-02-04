@@ -1,23 +1,18 @@
-use std::{thread, time::Duration};
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+// Example: Restart a component
 
 use gg_sdk::Sdk;
 
 fn main() {
     let sdk = Sdk::init();
-    sdk.connect().expect("Failed to connect to GG nucleus");
-    println!("Connected to GG nucleus.");
+    sdk.connect().expect("Failed to establish IPC connection");
 
-    println!("Sleeping for 15 seconds before restart...");
-    for i in (1..=15).rev() {
-        println!("Restart in {i} seconds");
-        thread::sleep(Duration::from_secs(1));
-    }
+    let component_name = "com.example.HelloWorld";
 
-    println!("Restarting component 'aws-greengrass-component-sdk.samples.restart_component'...");
-    sdk.restart_component(
-        "aws-greengrass-component-sdk.samples.restart_component",
-    )
-    .expect("Failed to restart component");
+    sdk.restart_component(component_name)
+        .expect("Failed to restart component");
 
-    println!("Restart request sent successfully.");
+    println!("Successfully requested restart for component: {component_name}");
 }
