@@ -36,47 +36,14 @@ The following Greengrass v2 IPC operations are currently supported by this SDK:
 - [SubscribeToConfigurationUpdate](https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-component-configuration.html#ipc-operation-subscribetoconfigurationupdate)
 - [RestartComponent](https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-deployments-components.html#ipc-operation-restartcomponent)
 
-## Sample Generic Components
+## Sample Greengrass Components
 
 For deployment instructions, see the
 [samples deployment guide](samples/README.md).
 
-C samples:
-
-- [Publish to IoT Core](samples/publish_to_iot_core.c)
-- [Subscribe to IoT Core](samples/subscribe_to_iot_core.c)
-- [Publish to Topic](samples/publish_to_topic.c)
-- [Subscribe to Topic](samples/subscribe_to_topic.c)
-- [Get Configuration](samples/get_configuration.c)
-- [Update Configuration](samples/update_configuration.c)
-- [Subscribe to Configuration Update](samples/subscribe_to_config_update.c)
-- [Update State](samples/update_state.c)
-- [Restart Component](samples/restart_component.c)
-
-Rust samples:
-
-- [Publish to IoT Core](rust/examples/publish_to_iot_core.rs)
-- [Subscribe to IoT Core](rust/examples/subscribe_to_iot_core.rs)
-- [Publish to Topic](rust/examples/publish_to_topic.rs)
-- [Subscribe to Topic](rust/examples/subscribe_to_topic.rs)
-- [Get Configuration](rust/examples/get_configuration.rs)
-- [Update Configuration](rust/examples/update_configuration.rs)
-- [Subscribe to Configuration Update](rust/examples/subscribe_to_config_update.rs)
-- [Update State](rust/examples/update_state.rs)
-- [Restart Component](rust/examples/restart_component.rs)
-
-C++ samples:
-
-- [Publish to IoT Core](cpp/samples/publish_to_iot_core.cpp)
-- [Subscribe to IoT Core](cpp/samples/subscribe_to_iot_core.cpp)
-- [Publish to Topic](cpp/samples/publish_to_topic.cpp)
-- [Subscribe to Topic](cpp/samples/subscribe_to_topic.cpp)
-- [Get Configuration](cpp/samples/get_configuration.cpp)
-- [Update Configuration](cpp/samples/update_configuration.cpp)
-- [Subscribe to Configuration Update](cpp/samples/subscribe_to_config_update.cpp)
-- [Update State](cpp/samples/update_state.cpp)
-- [Restart Component](cpp/samples/restart_component.cpp)
-- [Manipulating SDK data structures](cpp/samples/object_manipulation.cpp)
+- [C samples](samples/)
+- [C++ samples](cpp/samples/)
+- [Rust samples](rust/examples/)
 
 ## Security
 
