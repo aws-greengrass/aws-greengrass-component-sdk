@@ -1,10 +1,11 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-// Example: Restart a component
+// Example: Update a configuration value
 
 #include <gg/error.h>
 #include <gg/ipc/client.h>
+#include <gg/object.h>
 #include <gg/sdk.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,22 +19,16 @@ int main(void) {
         exit(-1);
     }
 
-    GgBuffer component_name = GG_STR("com.example.HelloWorld");
-
-    err = ggipc_restart_component(component_name);
+    // Update configuration value at key path ["mqtt", "port"] to 443
+    err = ggipc_update_config(
+        GG_BUF_LIST(GG_STR("mqtt"), GG_STR("port")),
+        NULL, // timestamp (NULL = current time)
+        gg_obj_i64(443)
+    );
     if (err != GG_ERR_OK) {
-        fprintf(
-            stderr,
-            "Failed to restart component: %.*s\n",
-            (int) component_name.len,
-            component_name.data
-        );
+        fprintf(stderr, "Failed to update configuration.\n");
         exit(-1);
     }
 
-    printf(
-        "Successfully requested restart for component: %.*s\n",
-        (int) component_name.len,
-        component_name.data
-    );
+    printf("Successfully updated configuration.\n");
 }

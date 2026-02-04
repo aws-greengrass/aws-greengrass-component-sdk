@@ -43,13 +43,17 @@ For deployment instructions, see the
 
 C samples:
 
-- [IoT Core MQTT Pub/Sub](samples/iot_core_mqtt/)
-- [Update State](samples/update_state/)
-- [Configuration Operations](samples/config/)
-- [Subscribe to Configuration Update](samples/subscribe_to_configuration_update/)
-- [Restart Component](samples/restart_component/)
+- [Publish to IoT Core](samples/publish_to_iot_core.c)
+- [Subscribe to IoT Core](samples/subscribe_to_iot_core.c)
+- [Publish to Topic](samples/publish_to_topic.c)
+- [Subscribe to Topic](samples/subscribe_to_topic.c)
+- [Get Configuration](samples/get_configuration.c)
+- [Update Configuration](samples/update_configuration.c)
+- [Subscribe to Configuration Update](samples/subscribe_to_config_update.c)
+- [Update State](samples/update_state.c)
+- [Restart Component](samples/restart_component.c)
 
-Rust samples (use same recipe as corresponding C sample):
+Rust samples:
 
 - [IoT Core MQTT Pub/Sub](rust/examples/iot_core_mqtt.rs)
 - [Update State](rust/examples/update_state.rs)
@@ -61,7 +65,7 @@ C++ samples:
 
 - [Local Pub/Sub](cpp/samples/pubsub_cpp)
 - [Configuration Operations](cpp/samples/config_ipc)
-- [Manipulaing SDK data structures](cpp/samples/object_manipulation)
+- [Manipulating SDK data structures](cpp/samples/object_manipulation)
 
 ## Security
 

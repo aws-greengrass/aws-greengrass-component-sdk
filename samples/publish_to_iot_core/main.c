@@ -1,7 +1,7 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-// Example: Restart a component
+// Example: Publish a message to AWS IoT Core
 
 #include <gg/error.h>
 #include <gg/ipc/client.h>
@@ -18,22 +18,22 @@ int main(void) {
         exit(-1);
     }
 
-    GgBuffer component_name = GG_STR("com.example.HelloWorld");
+    GgBuffer message = GG_STR("Hello, World");
+    GgBuffer topic = GG_STR("my/topic");
+    uint8_t qos = 1;
 
-    err = ggipc_restart_component(component_name);
+    err = ggipc_publish_to_iot_core(topic, message, qos);
     if (err != GG_ERR_OK) {
         fprintf(
             stderr,
-            "Failed to restart component: %.*s\n",
-            (int) component_name.len,
-            component_name.data
+            "Failed to publish to topic: %.*s\n",
+            (int) topic.len,
+            topic.data
         );
         exit(-1);
     }
 
     printf(
-        "Successfully requested restart for component: %.*s\n",
-        (int) component_name.len,
-        component_name.data
+        "Successfully published to topic: %.*s\n", (int) topic.len, topic.data
     );
 }

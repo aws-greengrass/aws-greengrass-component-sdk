@@ -25,13 +25,13 @@ aws s3 cp result/bin/sample_<name> s3://YOUR_BUCKET/gg-sdk-samples/sample_<name>
 
 ### 2. Update Recipe with S3 Location
 
-Copy the sample's `recipe.yml` and update the artifact URI:
+Copy the sample's `recipe.json` and update the artifact URI:
 
 ```bash
 cd samples/<sample_name>
-cp recipe.yml recipe-deploy.yml
-# Edit recipe-deploy.yml and replace:
-# URI: s3://EXAMPLE_BUCKET/sample_<name>
+cp recipe.json recipe-deploy.json
+# Edit recipe-deploy.json and replace:
+# URI: s3://amzn-s3-demo-bucket/...
 # with:
 # URI: s3://YOUR_BUCKET/gg-sdk-samples/sample_<name>
 ```
@@ -40,7 +40,7 @@ cp recipe.yml recipe-deploy.yml
 
 ```bash
 aws greengrassv2 create-component-version \
-  --inline-recipe fileb://recipe-deploy.yml \
+  --inline-recipe fileb://recipe-deploy.json \
   --region YOUR_REGION
 ```
 
