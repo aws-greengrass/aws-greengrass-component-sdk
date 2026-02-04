@@ -1,0 +1,39 @@
+{
+  "RecipeFormatVersion": "2020-01-25",
+  "ComponentName": "com.example.PubSubSubscriberCpp",
+  "ComponentVersion": "1.0.0",
+  "ComponentDescription": "A component that subscribes to messages.",
+  "ComponentPublisher": "Amazon",
+  "ComponentConfiguration": {
+    "DefaultConfiguration": {
+      "accessControl": {
+        "aws.greengrass.ipc.pubsub": {
+          "com.example.PubSubSubscriberCpp:pubsub:1": {
+            "policyDescription": "Allows access to subscribe to all topics.",
+            "operations": ["aws.greengrass#SubscribeToTopic"],
+            "resources": ["*"]
+          }
+        }
+      }
+    }
+  },
+  "Manifests": [
+    {
+      "Platform": {
+        "os": "linux",
+        "runtime": "*"
+      },
+      "Lifecycle": {
+        "run": "{artifacts:path}/sample_cpp_subscribe_to_topic"
+      },
+      "Artifacts": [
+        {
+          "URI": "s3://amzn-s3-demo-bucket/artifacts/com.example.PubSubSubscriberCpp/1.0.0/sample_cpp_subscribe_to_topic",
+          "Permission": {
+            "Execute": "OWNER"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "RecipeFormatVersion": "2020-01-25",
+  "ComponentName": "com.example.GetConfigurationCpp",
+  "ComponentVersion": "1.0.0",
+  "ComponentDescription": "A component that gets a configuration value.",
+  "ComponentPublisher": "Amazon",
+  "ComponentConfiguration": {
+    "DefaultConfiguration": {
+      "mqtt": {
+        "port": 8883
+      }
+    }
+  },
+  "Manifests": [
+    {
+      "Platform": {
+        "os": "linux",
+        "runtime": "*"
+      },
+      "Lifecycle": {
+        "run": "{artifacts:path}/sample_cpp_get_configuration"
+      },
+      "Artifacts": [
+        {
+          "URI": "s3://amzn-s3-demo-bucket/artifacts/com.example.GetConfigurationCpp/1.0.0/sample_cpp_get_configuration",
+          "Permission": {
+            "Execute": "OWNER"
+          }
+        }
+      ]
+    }
+  ]
+}

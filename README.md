@@ -63,9 +63,16 @@ Rust samples:
 
 C++ samples:
 
-- [Local Pub/Sub](cpp/samples/pubsub_cpp)
-- [Configuration Operations](cpp/samples/config_ipc)
-- [Manipulating SDK data structures](cpp/samples/object_manipulation)
+- [Publish to IoT Core](cpp/samples/publish_to_iot_core.cpp)
+- [Subscribe to IoT Core](cpp/samples/subscribe_to_iot_core.cpp)
+- [Publish to Topic](cpp/samples/publish_to_topic.cpp)
+- [Subscribe to Topic](cpp/samples/subscribe_to_topic.cpp)
+- [Get Configuration](cpp/samples/get_configuration.cpp)
+- [Update Configuration](cpp/samples/update_configuration.cpp)
+- [Subscribe to Configuration Update](cpp/samples/subscribe_to_config_update.cpp)
+- [Update State](cpp/samples/update_state.cpp)
+- [Restart Component](cpp/samples/restart_component.cpp)
+- [Manipulating SDK data structures](cpp/samples/object_manipulation.cpp)
 
 ## Security
 

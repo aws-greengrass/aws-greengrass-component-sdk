@@ -1,0 +1,45 @@
+{
+  "RecipeFormatVersion": "2020-01-25",
+  "ComponentName": "com.example.RestartComponentCpp",
+  "ComponentVersion": "1.0.0",
+  "ComponentDescription": "A component that restarts another component.",
+  "ComponentPublisher": "Amazon",
+  "ComponentDependencies": {
+    "aws.greengrass.Cli": {
+      "VersionRequirement": ">=2.0.0",
+      "DependencyType": "HARD"
+    }
+  },
+  "ComponentConfiguration": {
+    "DefaultConfiguration": {
+      "accessControl": {
+        "aws.greengrass.Cli": {
+          "com.example.RestartComponentCpp:cli:1": {
+            "policyDescription": "Allows access to restart components.",
+            "operations": ["aws.greengrass#RestartComponent"],
+            "resources": ["*"]
+          }
+        }
+      }
+    }
+  },
+  "Manifests": [
+    {
+      "Platform": {
+        "os": "linux",
+        "runtime": "*"
+      },
+      "Lifecycle": {
+        "run": "{artifacts:path}/sample_cpp_restart_component"
+      },
+      "Artifacts": [
+        {
+          "URI": "s3://amzn-s3-demo-bucket/artifacts/com.example.RestartComponentCpp/1.0.0/sample_cpp_restart_component",
+          "Permission": {
+            "Execute": "OWNER"
+          }
+        }
+      ]
+    }
+  ]
+}
