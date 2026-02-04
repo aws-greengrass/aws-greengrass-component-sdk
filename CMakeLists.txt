@@ -236,17 +236,14 @@ if(PROJECT_IS_TOP_LEVEL)
   install(TARGETS gg-sdk)
 
   if(BUILD_SAMPLES)
-    file(GLOB SAMPLE_DIRS CONFIGURE_DEPENDS "samples/*")
-    foreach(sample_dir ${SAMPLE_DIRS})
-      if(NOT IS_DIRECTORY ${sample_dir})
-        continue()
-      endif()
-      get_filename_component(sample_name ${sample_dir} NAME_WLE)
+    file(GLOB SAMPLE_SRCS CONFIGURE_DEPENDS "samples/*.c")
+    foreach(sample_src ${SAMPLE_SRCS})
+      get_filename_component(sample_name ${sample_src} NAME_WLE)
       set_property(
-        SOURCE ${sample_dir}/main.c
+        SOURCE ${sample_src}
         APPEND_STRING
-        PROPERTY COMPILE_FLAGS "-frandom-seed=${sample_dir}/main.c")
-      add_executable(sample_${sample_name} ${sample_dir}/main.c)
+        PROPERTY COMPILE_FLAGS "-frandom-seed=${sample_src}")
+      add_executable(sample_${sample_name} ${sample_src})
       target_link_libraries(sample_${sample_name} PRIVATE gg-sdk)
       install(TARGETS sample_${sample_name})
     endforeach()
