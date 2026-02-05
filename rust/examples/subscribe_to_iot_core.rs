@@ -3,9 +3,8 @@
 
 // Example: Subscribe to messages from AWS IoT Core
 
-use std::{thread, time::Duration};
-
 use gg_sdk::{Qos, Sdk};
+use std::{thread, time::Duration};
 
 fn main() {
     let sdk = Sdk::init();

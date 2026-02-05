@@ -3,9 +3,8 @@
 
 // Example: Subscribe to configuration updates
 
-use std::{thread, time::Duration};
-
 use gg_sdk::Sdk;
+use std::{thread, time::Duration};
 
 fn main() {
     let sdk = Sdk::init();
@@ -16,14 +15,7 @@ fn main() {
         println!(
             "Received configuration update for component: {component_name}"
         );
-        print!("Key path: [");
-        for (i, key) in key_path.iter().enumerate() {
-            if i > 0 {
-                print!(", ");
-            }
-            print!("\"{key}\"");
-        }
-        println!("]");
+        println!("Key path: {key_path:?}");
     };
 
     let _sub = sdk
