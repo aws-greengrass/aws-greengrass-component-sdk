@@ -4,7 +4,10 @@
 #include <assert.h>
 #include <gg/buffer.h>
 #include <gg/map.h>
+#include <gg/object.h>
 #include <gg/types.h>
+#include <gg/vector.h>
+#include <time.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -135,5 +138,74 @@ GgipcPacketSequence gg_test_config_bad_server_response_sequence(
 
     GgipcPacket response = config_bad_empty_response(stream_id);
 
+    return (GgipcPacketSequence) { .packets = { request, response }, .len = 2 };
+}
+
+static GgipcPacket gg_test_config_update_request_packet(
+    int32_t stream_id,
+    GgList key_path,
+    struct timespec timestamp,
+    GgObject value
+) {
+    double timestamp_float
+        = (double) timestamp.tv_sec + ((double) (timestamp.tv_nsec) * 1e-9);
+    static GgKV pairs[3];
+    pairs[0] = gg_kv(GG_STR("keyPath"), gg_obj_list(key_path));
+    pairs[1] = gg_kv(GG_STR("timestamp"), gg_obj_f64(timestamp_float));
+    pairs[2] = gg_kv(GG_STR("valueToMerge"), value);
+
+    size_t pairs_len = 3;
+
+    return (GgipcPacket) { .has_payload = true,
+                           .payload = gg_obj_map((GgMap) { .len = pairs_len,
+                                                           .pairs = pairs }),
+                           .direction = CLIENT_TO_SERVER,
+                           .headers = GG_IPC_REQUEST_HEADERS(
+                               stream_id, "aws.greengrass#UpdateConfiguration"
+                           ),
+                           .header_count = GG_IPC_REQUEST_HEADERS_COUNT };
+}
+
+static GgipcPacket gg_test_config_update_response_packet(int32_t stream_id) {
+    return (GgipcPacket) { .has_payload = false,
+                           .direction = SERVER_TO_CLIENT,
+                           .headers = GG_IPC_ACCEPTED_HEADERS(
+                               stream_id, "aws.greengrass#UpdateConfiguration"
+                           ),
+                           .header_count = GG_IPC_ACCEPTED_HEADERS_COUNT };
+}
+
+GgipcPacketSequence gg_test_config_update_sequence(
+    int32_t stream_id,
+    GgBufList key_path,
+    struct timespec timestamp,
+    GgObject value
+) {
+    static GgObject objects[GG_MAX_OBJECT_DEPTH - 1U];
+    GgObjVec key_path_vec = GG_OBJ_VEC(objects);
+    GgError err = GG_ERR_OK;
+    GG_BUF_LIST_FOREACH (key, key_path) {
+        gg_obj_vec_chain_push(&err, &key_path_vec, gg_obj_buf(*key));
+    }
+    assert((err == GG_ERR_OK) && ("TEST LOGIC ERROR: key_path too long"));
+
+    GgipcPacket request = gg_test_config_update_request_packet(
+        stream_id, key_path_vec.list, timestamp, value
+    );
+    GgipcPacket response = gg_test_config_update_response_packet(stream_id);
+    return (GgipcPacketSequence) { .packets = { request, response }, .len = 2 };
+}
+
+/// test with key_path=["key"], timestamp=1 second, value=gg_obj_map(GG_MAP())
+GgipcPacketSequence gg_test_config_update_rejected_sequence(int32_t stream_id) {
+    static GgObject list[1];
+    list[0] = gg_obj_buf(GG_STR("key"));
+    GgipcPacket request = gg_test_config_update_request_packet(
+        stream_id,
+        (GgList) { .items = list, .len = 1 },
+        (struct timespec) { .tv_sec = 1, .tv_nsec = 0 },
+        gg_obj_map((GgMap) { .len = 0, .pairs = NULL })
+    );
+    GgipcPacket response = gg_test_ipc_service_error_packet(stream_id);
     return (GgipcPacketSequence) { .packets = { request, response }, .len = 2 };
 }
