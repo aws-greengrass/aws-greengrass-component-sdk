@@ -329,3 +329,124 @@ GG_TEST_DEFINE(get_configuration_bad_server_response) {
 
     GG_TEST_ASSERT_OK(gg_process_wait(pid));
 }
+
+GG_TEST_DEFINE(update_configuration) {
+    struct timespec timestamp;
+    timespec_get(&timestamp, TIME_UTC);
+
+    GgBufList key_path = GG_BUF_LIST(GG_STR("Nested"));
+    GgObject config_value
+        = gg_obj_map(GG_MAP(gg_kv(GG_STR("Key"), gg_obj_buf(GG_STR("Value")))));
+    pid_t pid = fork();
+    TEST_ASSERT_TRUE_MESSAGE(pid >= 0, "fork failed");
+
+    if (pid == 0) {
+        gg_sdk_init();
+        GG_TEST_ASSERT_OK(ggipc_connect());
+        GG_TEST_ASSERT_OK(
+            ggipc_update_config(key_path, &timestamp, config_value)
+        );
+
+        TEST_PASS();
+    }
+
+    GG_TEST_ASSERT_OK(gg_test_accept_client(1));
+
+    GG_TEST_ASSERT_OK(gg_test_expect_packet_sequence(
+        gg_test_connect_accepted_sequence(gg_test_get_auth_token()), 5
+    ));
+
+    GG_TEST_ASSERT_OK(gg_test_expect_packet_sequence(
+        gg_test_config_update_sequence(1, key_path, timestamp, config_value), 5
+    ));
+
+    GG_TEST_ASSERT_OK(gg_test_wait_for_client_disconnect(1));
+
+    GG_TEST_ASSERT_OK(gg_process_wait(pid));
+}
+
+GG_TEST_DEFINE(update_configuration_input_validation) {
+    GgBuffer buff_arr[GG_MAX_OBJECT_DEPTH * 2];
+    size_t buff_arr_len = sizeof(buff_arr) / sizeof(buff_arr[0]);
+    GgBufList too_long_key
+        = (GgBufList) { .bufs = buff_arr, .len = buff_arr_len };
+
+    GG_BUF_LIST_FOREACH (key, too_long_key) {
+        *key = GG_STR("Nesting");
+    }
+
+    struct timespec negative_timestamp = { .tv_nsec = -1, .tv_sec = -1 };
+
+    pid_t pid = fork();
+    TEST_ASSERT_TRUE_MESSAGE(pid >= 0, "fork failed");
+
+    if (pid == 0) {
+        gg_sdk_init();
+        GG_TEST_ASSERT_OK(ggipc_connect());
+
+        // Object must be a map of buffer list is empty
+        GG_TEST_ASSERT_BAD(
+            ggipc_update_config(GG_BUF_LIST(), NULL, gg_obj_i64(42))
+        );
+
+        // Key too long
+        GG_TEST_ASSERT_BAD(
+            ggipc_update_config(too_long_key, NULL, GG_OBJ_NULL)
+        );
+
+        // Negative timestamp
+        if ((negative_timestamp.tv_nsec < 0)
+            || (negative_timestamp.tv_sec < 0)) {
+            GG_TEST_ASSERT_BAD(ggipc_update_config(
+                GG_BUF_LIST(GG_STR("key")), &negative_timestamp, GG_OBJ_NULL
+            ));
+        } else {
+            GG_LOGI("Timestamps are not negative on this system.");
+        }
+
+        TEST_PASS();
+    }
+
+    GG_TEST_ASSERT_OK(gg_test_accept_client(1));
+
+    GG_TEST_ASSERT_OK(gg_test_expect_packet_sequence(
+        gg_test_connect_accepted_sequence(gg_test_get_auth_token()), 5
+    ));
+
+    GG_TEST_ASSERT_OK(gg_test_wait_for_client_disconnect(5));
+
+    GG_TEST_ASSERT_OK(gg_process_wait(pid));
+}
+
+GG_TEST_DEFINE(update_configuration_server_error) {
+    struct timespec timestamp = { .tv_sec = 1, .tv_nsec = 0 };
+
+    GgBufList key_path = GG_BUF_LIST(GG_STR("key"));
+    GgObject config_value = gg_obj_map(GG_MAP());
+    pid_t pid = fork();
+    TEST_ASSERT_TRUE_MESSAGE(pid >= 0, "fork failed");
+
+    if (pid == 0) {
+        gg_sdk_init();
+        GG_TEST_ASSERT_OK(ggipc_connect());
+        GG_TEST_ASSERT_BAD(
+            ggipc_update_config(key_path, &timestamp, config_value)
+        );
+
+        TEST_PASS();
+    }
+
+    GG_TEST_ASSERT_OK(gg_test_accept_client(1));
+
+    GG_TEST_ASSERT_OK(gg_test_expect_packet_sequence(
+        gg_test_connect_accepted_sequence(gg_test_get_auth_token()), 5
+    ));
+
+    GG_TEST_ASSERT_OK(gg_test_expect_packet_sequence(
+        gg_test_config_update_rejected_sequence(1), 5
+    ));
+
+    GG_TEST_ASSERT_OK(gg_test_wait_for_client_disconnect(1));
+
+    GG_TEST_ASSERT_OK(gg_process_wait(pid));
+}
