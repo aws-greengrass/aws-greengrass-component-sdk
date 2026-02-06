@@ -2,6 +2,7 @@
 #define GG_IPC_PACKET_SEQUENCES_H
 
 #include <gg/ipc/mock.h>
+#include <gg/types.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -23,6 +24,16 @@ GgipcPacketSequence gg_test_config_bad_server_response_sequence(
 );
 
 GgipcPacketSequence gg_test_config_get_not_found_sequence(int32_t stream_id);
+
+GgipcPacketSequence gg_test_config_update_sequence(
+    int32_t stream_id,
+    GgBufList key_path,
+    struct timespec timestamp,
+    GgObject value
+);
+
+/// test with key_path=["key"], timestamp=1 second, value=gg_obj_map(GG_MAP())
+GgipcPacketSequence gg_test_config_update_rejected_sequence(int32_t stream_id);
 
 GgipcPacketSequence gg_test_mqtt_publish_accepted_sequence(
     int32_t stream_id, GgBuffer topic, GgBuffer payload_base64, GgBuffer qos
