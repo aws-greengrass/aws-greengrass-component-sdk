@@ -44,20 +44,12 @@ GG_TEST_DEFINE(get_configuration_str_okay) {
         TEST_PASS();
     }
 
-    GG_TEST_ASSERT_OK(gg_test_accept_client(1));
-
-    GG_TEST_ASSERT_OK(gg_test_expect_packet_sequence(
-        gg_test_connect_accepted_sequence(gg_test_get_auth_token()), 5
-    ));
-
-    GG_TEST_ASSERT_OK(gg_test_expect_packet_sequence(
+    GG_TEST_ASSERT_OK(gg_test_connect_request_disconnect_sequence(
         gg_test_config_get_object_sequence(
             1, GG_BUF_LIST(GG_STR("key")), NULL, gg_obj_buf(expected)
         ),
         5
     ));
-
-    GG_TEST_ASSERT_OK(gg_test_wait_for_client_disconnect(1));
 
     GG_TEST_ASSERT_OK(gg_process_wait(pid));
 }
@@ -81,20 +73,12 @@ GG_TEST_DEFINE(get_configuration_str_wrong_type) {
         TEST_PASS();
     }
 
-    GG_TEST_ASSERT_OK(gg_test_accept_client(1));
-
-    GG_TEST_ASSERT_OK(gg_test_expect_packet_sequence(
-        gg_test_connect_accepted_sequence(gg_test_get_auth_token()), 5
-    ));
-
-    GG_TEST_ASSERT_OK(gg_test_expect_packet_sequence(
+    GG_TEST_ASSERT_OK(gg_test_connect_request_disconnect_sequence(
         gg_test_config_get_object_sequence(
             1, GG_BUF_LIST(GG_STR("key")), NULL, bad_type
         ),
         5
     ));
-
-    GG_TEST_ASSERT_OK(gg_test_wait_for_client_disconnect(1));
 
     GG_TEST_ASSERT_OK(gg_process_wait(pid));
 }
@@ -120,20 +104,12 @@ GG_TEST_DEFINE(get_configuration_str_cant_allocate) {
         TEST_PASS();
     }
 
-    GG_TEST_ASSERT_OK(gg_test_accept_client(1));
-
-    GG_TEST_ASSERT_OK(gg_test_expect_packet_sequence(
-        gg_test_connect_accepted_sequence(gg_test_get_auth_token()), 5
-    ));
-
-    GG_TEST_ASSERT_OK(gg_test_expect_packet_sequence(
+    GG_TEST_ASSERT_OK(gg_test_connect_request_disconnect_sequence(
         gg_test_config_get_object_sequence(
             1, GG_BUF_LIST(GG_STR("key")), NULL, gg_obj_buf(expected)
         ),
         5
     ));
-
-    GG_TEST_ASSERT_OK(gg_test_wait_for_client_disconnect(1));
 
     GG_TEST_ASSERT_OK(gg_process_wait(pid));
 }
@@ -167,20 +143,12 @@ GG_TEST_DEFINE(get_configuration_map_okay) {
         TEST_PASS();
     }
 
-    GG_TEST_ASSERT_OK(gg_test_accept_client(1));
-
-    GG_TEST_ASSERT_OK(gg_test_expect_packet_sequence(
-        gg_test_connect_accepted_sequence(gg_test_get_auth_token()), 5
-    ));
-
-    GG_TEST_ASSERT_OK(gg_test_expect_packet_sequence(
+    GG_TEST_ASSERT_OK(gg_test_connect_request_disconnect_sequence(
         gg_test_config_get_object_sequence(
             1, key_path, &component_name, expected_object
         ),
         5
     ));
-
-    GG_TEST_ASSERT_OK(gg_test_wait_for_client_disconnect(1));
 
     GG_TEST_ASSERT_OK(gg_process_wait(pid));
 }
@@ -200,17 +168,9 @@ GG_TEST_DEFINE(get_configuration_not_found) {
         TEST_PASS();
     }
 
-    GG_TEST_ASSERT_OK(gg_test_accept_client(1));
-
-    GG_TEST_ASSERT_OK(gg_test_expect_packet_sequence(
-        gg_test_connect_accepted_sequence(gg_test_get_auth_token()), 5
+    GG_TEST_ASSERT_OK(gg_test_connect_request_disconnect_sequence(
+        gg_test_config_get_not_found_sequence(1), 10
     ));
-
-    GG_TEST_ASSERT_OK(gg_test_expect_packet_sequence(
-        gg_test_config_get_not_found_sequence(1), 5
-    ));
-
-    GG_TEST_ASSERT_OK(gg_test_wait_for_client_disconnect(1));
 
     GG_TEST_ASSERT_OK(gg_process_wait(pid));
 }
@@ -248,11 +208,7 @@ GG_TEST_DEFINE(get_configuration_key_path_too_long) {
         TEST_PASS();
     }
 
-    GG_TEST_ASSERT_OK(gg_test_accept_client(1));
-
-    GG_TEST_ASSERT_OK(gg_test_expect_packet_sequence(
-        gg_test_connect_accepted_sequence(gg_test_get_auth_token()), 5
-    ));
+    GG_TEST_ASSERT_OK(gg_test_accept_client_handshake(1));
 
     GG_TEST_ASSERT_OK(gg_test_wait_for_client_disconnect(1));
 
@@ -283,20 +239,12 @@ GG_TEST_DEFINE(get_configuration_obj_cant_allocate) {
         TEST_PASS();
     }
 
-    GG_TEST_ASSERT_OK(gg_test_accept_client(1));
-
-    GG_TEST_ASSERT_OK(gg_test_expect_packet_sequence(
-        gg_test_connect_accepted_sequence(gg_test_get_auth_token()), 5
-    ));
-
-    GG_TEST_ASSERT_OK(gg_test_expect_packet_sequence(
+    GG_TEST_ASSERT_OK(gg_test_connect_request_disconnect_sequence(
         gg_test_config_get_object_sequence(
             1, key_path, &component_name, expected_object
         ),
-        5
+        10
     ));
-
-    GG_TEST_ASSERT_OK(gg_test_wait_for_client_disconnect(1));
 
     GG_TEST_ASSERT_OK(gg_process_wait(pid));
 }
@@ -315,17 +263,9 @@ GG_TEST_DEFINE(get_configuration_bad_server_response) {
         TEST_PASS();
     }
 
-    GG_TEST_ASSERT_OK(gg_test_accept_client(1));
-
-    GG_TEST_ASSERT_OK(gg_test_expect_packet_sequence(
-        gg_test_connect_accepted_sequence(gg_test_get_auth_token()), 5
+    GG_TEST_ASSERT_OK(gg_test_connect_request_disconnect_sequence(
+        gg_test_config_bad_server_response_sequence(1), 10
     ));
-
-    GG_TEST_ASSERT_OK(gg_test_expect_packet_sequence(
-        gg_test_config_bad_server_response_sequence(1), 5
-    ));
-
-    GG_TEST_ASSERT_OK(gg_test_wait_for_client_disconnect(1));
 
     GG_TEST_ASSERT_OK(gg_process_wait(pid));
 }
@@ -350,17 +290,9 @@ GG_TEST_DEFINE(update_configuration) {
         TEST_PASS();
     }
 
-    GG_TEST_ASSERT_OK(gg_test_accept_client(1));
-
-    GG_TEST_ASSERT_OK(gg_test_expect_packet_sequence(
-        gg_test_connect_accepted_sequence(gg_test_get_auth_token()), 5
+    GG_TEST_ASSERT_OK(gg_test_connect_request_disconnect_sequence(
+        gg_test_config_update_sequence(1, key_path, timestamp, config_value), 10
     ));
-
-    GG_TEST_ASSERT_OK(gg_test_expect_packet_sequence(
-        gg_test_config_update_sequence(1, key_path, timestamp, config_value), 5
-    ));
-
-    GG_TEST_ASSERT_OK(gg_test_wait_for_client_disconnect(1));
 
     GG_TEST_ASSERT_OK(gg_process_wait(pid));
 }
@@ -407,11 +339,7 @@ GG_TEST_DEFINE(update_configuration_input_validation) {
         TEST_PASS();
     }
 
-    GG_TEST_ASSERT_OK(gg_test_accept_client(1));
-
-    GG_TEST_ASSERT_OK(gg_test_expect_packet_sequence(
-        gg_test_connect_accepted_sequence(gg_test_get_auth_token()), 5
-    ));
+    GG_TEST_ASSERT_OK(gg_test_accept_client_handshake(1));
 
     GG_TEST_ASSERT_OK(gg_test_wait_for_client_disconnect(5));
 
@@ -436,17 +364,9 @@ GG_TEST_DEFINE(update_configuration_server_error) {
         TEST_PASS();
     }
 
-    GG_TEST_ASSERT_OK(gg_test_accept_client(1));
-
-    GG_TEST_ASSERT_OK(gg_test_expect_packet_sequence(
-        gg_test_connect_accepted_sequence(gg_test_get_auth_token()), 5
+    GG_TEST_ASSERT_OK(gg_test_connect_request_disconnect_sequence(
+        gg_test_config_update_rejected_sequence(1), 10
     ));
-
-    GG_TEST_ASSERT_OK(gg_test_expect_packet_sequence(
-        gg_test_config_update_rejected_sequence(1), 5
-    ));
-
-    GG_TEST_ASSERT_OK(gg_test_wait_for_client_disconnect(1));
 
     GG_TEST_ASSERT_OK(gg_process_wait(pid));
 }
