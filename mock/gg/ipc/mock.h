@@ -76,6 +76,14 @@ typedef struct {
 /// The client timeout is the time in seconds to wait for
 GgError gg_test_accept_client(int client_timeout);
 
+GgError gg_test_accept_client_handshake(int client_timeout);
+
+/// Blocks until the client connects, handshakes, sends the desired packet
+/// sequence, and disconnects with no further data sent.
+GgError gg_test_connect_request_disconnect_sequence(
+    GgipcPacketSequence request_sequence, int timeout
+);
+
 /// Blocks until all packets in the packet sequence are validated or until any
 /// are invalidated. Returns GG_ERR_OK if all packets were successfully
 /// sent/received. The client timeout is the time in seconds to wait for the

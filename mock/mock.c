@@ -1,4 +1,5 @@
 #include "gg/ipc/mock.h"
+#include "gg/ipc/packet_sequences.h"
 #include "gg/object_compare.h"
 #include <assert.h>
 #include <errno.h>
@@ -26,6 +27,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/un.h>
+#include <time.h>
 #include <unistd.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -595,4 +597,59 @@ GgBuffer gg_test_get_socket_path(void) {
 
 GgBuffer gg_test_get_auth_token(void) {
     return ipc_auth_token_buf;
+}
+
+GgError gg_test_accept_client_handshake(int client_timeout) {
+    GgError ret = gg_test_accept_client(client_timeout);
+    if (ret != GG_ERR_OK) {
+        return ret;
+    }
+
+    return gg_test_expect_packet_sequence(
+        gg_test_connect_accepted_sequence(gg_test_get_auth_token()),
+        client_timeout
+    );
+}
+
+GgError gg_test_connect_request_disconnect_sequence(
+    GgipcPacketSequence request_sequence, int timeout
+) {
+    struct timespec timeout_deadline;
+    clock_gettime(CLOCK_MONOTONIC, &timeout_deadline);
+    timeout_deadline.tv_sec += timeout;
+
+    GgError ret = gg_test_accept_client_handshake(timeout);
+    if (ret != GG_ERR_OK) {
+        return ret;
+    }
+
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+
+    time_t timeout_remains = timeout_deadline.tv_sec - now.tv_sec;
+    if (timeout_deadline.tv_nsec < now.tv_nsec) {
+        timeout_remains--;
+    }
+    if (timeout_remains <= 0) {
+        return GG_ERR_TIMEOUT;
+    }
+
+    ret = gg_test_expect_packet_sequence(
+        request_sequence, (int) timeout_remains
+    );
+    if (ret != GG_ERR_OK) {
+        return ret;
+    }
+
+    clock_gettime(CLOCK_MONOTONIC, &now);
+
+    timeout_remains = timeout_deadline.tv_sec - now.tv_sec;
+    if (timeout_deadline.tv_nsec < now.tv_nsec) {
+        timeout_remains--;
+    }
+    if (timeout_remains <= 0) {
+        return GG_ERR_TIMEOUT;
+    }
+
+    return gg_test_wait_for_client_disconnect((int) timeout_remains);
 }
