@@ -24,6 +24,8 @@ fn main() {
                 .unwrap(),
         )
         .clang_arg(format!("-I{}", project_root.join("include").display()))
+        .clang_arg(format!("-I{}", project_root.join("priv_include").display()))
+        .clang_arg(format!("-I{}", project_root.join("mock").display()))
         .default_enum_style(bindgen::EnumVariation::Rust {
             non_exhaustive: false,
         })
@@ -51,7 +53,7 @@ fn main() {
         .unwrap();
 
     let mut src_files = Vec::new();
-    let mut dirs = vec![project_root.join("src")];
+    let mut dirs = vec![project_root.join("src"), project_root.join("mock")];
     while let Some(dir) = dirs.pop() {
         for entry in std::fs::read_dir(dir).unwrap() {
             let entry = entry.unwrap();
@@ -73,6 +75,7 @@ fn main() {
         .files(&src_files)
         .include(project_root.join("include"))
         .include(project_root.join("priv_include"))
+        .include(project_root.join("mock"))
         .include(&manifest_dir)
         .flag("-pthread")
         .flag("-fno-strict-aliasing")
@@ -98,4 +101,5 @@ fn main() {
     println!("cargo:rerun-if-changed=../src");
     println!("cargo:rerun-if-changed=../include");
     println!("cargo:rerun-if-changed=../priv_include");
+    println!("cargo:rerun-if-changed=../mock");
 }

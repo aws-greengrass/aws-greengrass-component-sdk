@@ -891,3 +891,276 @@ fn key_path_to_buf_list(
         len: key_path.len(),
     })
 }
+
+#[cfg(test)]
+mod test {
+    use std::sync::{Condvar, Mutex};
+
+    use super::{Qos, Sdk};
+    use crate::c;
+    use crate::error::*;
+
+    static TEST_MUTEX: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+    pub(crate) fn run_ipc_handshake_test<F: FnOnce() -> Result<()>>(
+        test_body: F,
+    ) -> Result<()> {
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        unsafe {
+            Result::from(c::gg_test_setup_ipc(
+                c"/tmp/gg-test".as_ptr(),
+                0o666,
+                c"1234567890ABCDEF".as_ptr(),
+            ))?;
+
+            let pid = libc::fork();
+            assert!(pid >= 0, "fork failed");
+
+            if pid == 0 {
+                test_body().unwrap();
+                libc::exit(0);
+            }
+
+            Result::from(c::gg_test_accept_client_handshake(5))?;
+
+            Result::from(c::gg_test_wait_for_client_disconnect(30))?;
+
+            c::gg_test_close();
+
+            let mut status = 0;
+            libc::waitpid(pid, &mut status, 0);
+
+            assert_eq!(libc::WIFEXITED(status), true);
+            assert_eq!(libc::WEXITSTATUS(status), 0);
+        };
+
+        Ok(())
+    }
+
+    pub(crate) fn run_ipc_sequence_test<F: FnOnce() -> Result<()>>(
+        packet_sequence: c::GgipcPacketSequence,
+        test_body: F,
+    ) -> Result<()> {
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        unsafe {
+            Result::from(c::gg_test_setup_ipc(
+                c"/tmp/gg-test".as_ptr(),
+                0o666,
+                c"1234567890ABCDEF".as_ptr(),
+            ))?;
+
+            let pid = libc::fork();
+            assert!(pid >= 0, "fork failed");
+
+            if pid == 0 {
+                test_body().unwrap();
+                libc::exit(0);
+            }
+
+            Result::from(c::gg_test_connect_request_disconnect_sequence(
+                packet_sequence,
+                10,
+            ))?;
+
+            c::gg_test_close();
+
+            let mut status = 0;
+            libc::waitpid(pid, &mut status, 0);
+
+            assert_eq!(libc::WIFEXITED(status), true);
+            assert_eq!(libc::WEXITSTATUS(status), 0);
+        };
+
+        Ok(())
+    }
+
+    fn get_test_socket_path() -> &'static str {
+        unsafe {
+            let buf = c::gg_test_get_socket_path();
+            core::str::from_utf8_unchecked(core::slice::from_raw_parts(
+                buf.data, buf.len,
+            ))
+        }
+    }
+
+    fn get_test_auth_token() -> &'static str {
+        unsafe {
+            let buf = c::gg_test_get_auth_token();
+            core::str::from_utf8_unchecked(core::slice::from_raw_parts(
+                buf.data, buf.len,
+            ))
+        }
+    }
+
+    #[test]
+    fn test_connect_okay() -> Result<()> {
+        run_ipc_handshake_test(|| {
+            let sdk = Sdk::init();
+            sdk.connect()
+        })
+    }
+
+    #[test]
+    fn test_connect_with_token_okay() -> Result<()> {
+        run_ipc_handshake_test(|| unsafe {
+            // Unset env vars to force explicit token usage
+            libc::unsetenv(c"SVCUID".as_ptr());
+            libc::unsetenv(
+                c"AWS_GG_NUCLEUS_DOMAIN_SOCKET_FILEPATH_FOR_COMPONENT".as_ptr(),
+            );
+
+            let sdk = Sdk::init();
+            sdk.connect_with_token(
+                get_test_socket_path(),
+                get_test_auth_token(),
+            )
+        })
+    }
+
+    #[test]
+    fn test_publish_to_iot_core_okay() -> Result<()> {
+        let topic = "my/topic";
+        let payload_base64 = "SGVsbG8gd29ybGQh";
+        let qos = "0";
+        let seq = unsafe {
+            c::gg_test_mqtt_publish_accepted_sequence(
+                1,
+                c::GgBuffer {
+                    data: topic.as_ptr().cast_mut(),
+                    len: topic.len(),
+                },
+                c::GgBuffer {
+                    data: payload_base64.as_ptr().cast_mut(),
+                    len: payload_base64.len(),
+                },
+                c::GgBuffer {
+                    data: qos.as_ptr().cast_mut(),
+                    len: qos.len(),
+                },
+            )
+        };
+        run_ipc_sequence_test(seq, || {
+            let sdk = Sdk::init();
+            sdk.connect()?;
+            sdk.publish_to_iot_core(
+                "my/topic",
+                b"Hello world!",
+                Qos::AtMostOnce,
+            )
+        })
+    }
+
+    #[test]
+    fn test_publish_to_iot_core_bad_alloc() -> Result<()> {
+        run_ipc_handshake_test(|| {
+            let sdk = Sdk::init();
+            sdk.connect()?;
+            let payload = [0u8; 0x20000];
+            assert_eq!(
+                sdk.publish_to_iot_core("my/topic", &payload, Qos::AtMostOnce),
+                Err(Error::Nomem),
+            );
+            Ok(())
+        })
+    }
+
+    #[test]
+    fn test_publish_to_iot_core_rejected() -> Result<()> {
+        let topic = "my/topic";
+        let payload_base64 = "SGVsbG8gd29ybGQh";
+        let qos = "0";
+        let seq = unsafe {
+            c::gg_test_mqtt_publish_error_sequence(
+                1,
+                c::GgBuffer {
+                    data: topic.as_ptr().cast_mut(),
+                    len: topic.len(),
+                },
+                c::GgBuffer {
+                    data: payload_base64.as_ptr().cast_mut(),
+                    len: payload_base64.len(),
+                },
+                c::GgBuffer {
+                    data: qos.as_ptr().cast_mut(),
+                    len: qos.len(),
+                },
+            )
+        };
+        run_ipc_sequence_test(seq, || {
+            let sdk = Sdk::init();
+            sdk.connect()?;
+            assert!(
+                sdk.publish_to_iot_core(
+                    "my/topic",
+                    b"Hello world!",
+                    Qos::AtMostOnce
+                )
+                .is_err()
+            );
+            Ok(())
+        })
+    }
+
+    // NOTE: publish_to_iot_core_invalid_qos cannot be ported; the Rust Qos
+    // enum prevents invalid values at compile time.
+
+    #[test]
+    fn test_subscribe_to_iot_core_okay() -> Result<()> {
+        let topic = "my/topic";
+        let payload_base64 = "SGVsbG8gd29ybGQh";
+        let qos = "0";
+        let expected_calls: usize = 3;
+        let seq = unsafe {
+            c::gg_test_mqtt_subscribe_accepted_sequence(
+                1,
+                c::GgBuffer {
+                    data: topic.as_ptr().cast_mut(),
+                    len: topic.len(),
+                },
+                c::GgBuffer {
+                    data: payload_base64.as_ptr().cast_mut(),
+                    len: payload_base64.len(),
+                },
+                c::GgBuffer {
+                    data: qos.as_ptr().cast_mut(),
+                    len: qos.len(),
+                },
+                expected_calls,
+            )
+        };
+        run_ipc_sequence_test(seq, || {
+            let sdk = Sdk::init();
+            sdk.connect()?;
+
+            let pair = (Mutex::new(0usize), Condvar::new());
+            let cb = |t: &str, p: &[u8]| {
+                assert_eq!(t, "my/topic");
+                assert_eq!(p, b"Hello world!");
+                let mut count = pair.0.lock().unwrap();
+                *count += 1;
+                if *count >= expected_calls {
+                    pair.1.notify_one();
+                }
+            };
+            let sub =
+                sdk.subscribe_to_iot_core("my/topic", Qos::AtMostOnce, &cb)?;
+
+            let guard = pair.0.lock().unwrap();
+            let (guard, timeout) = pair
+                .1
+                .wait_timeout_while(
+                    guard,
+                    std::time::Duration::from_secs(5),
+                    |count| *count < expected_calls,
+                )
+                .unwrap();
+            assert!(
+                !timeout.timed_out(),
+                "Timed out waiting for subscription responses"
+            );
+            assert_eq!(*guard, expected_calls);
+            std::mem::forget(sub);
+            Ok(())
+        })
+    }
+}

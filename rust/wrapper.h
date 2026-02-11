@@ -4,6 +4,8 @@
 
 #include <gg/ipc/client.h>
 #include <gg/ipc/client_raw.h>
+#include <gg/ipc/mock.h>
+#include <gg/ipc/packet_sequences.h>
 #include <gg/map.h>
 #include <gg/sdk.h>
 #include <time.h>

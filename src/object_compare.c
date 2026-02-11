@@ -51,22 +51,6 @@ static bool int_eq(int64_t lhs, int64_t rhs) {
     return true;
 }
 
-static bool float_eq(double lhs, double rhs) {
-    if (isnan(lhs) != isnan(rhs)) {
-        GG_LOGE("NaN comparison failed (%g != %g)", lhs, rhs);
-        return false;
-    }
-    double error = fabs(lhs - rhs);
-    if (error <= DBL_EPSILON) {
-        return true;
-    }
-    if (error <= (DBL_EPSILON * fmin(fabs(lhs), fabs(rhs)))) {
-        return true;
-    }
-    GG_LOGE("Float comparison failed (%g != %g).", lhs, rhs);
-    return false;
-}
-
 static bool buf_eq(GgBuffer lhs, GgBuffer rhs) {
     if (!gg_buffer_eq(lhs, rhs)) {
         GG_LOGE(
@@ -130,9 +114,7 @@ bool gg_obj_eq(GgObject lhs, GgObject rhs) {
                 }
                 break;
             case GG_TYPE_F64:
-                if (!float_eq(
-                        gg_obj_into_f64(*lhs_obj), gg_obj_into_f64(*rhs_obj)
-                    )) {
+                if (gg_obj_into_f64(*lhs_obj) != gg_obj_into_f64(*rhs_obj)) {
                     return false;
                 }
                 break;
