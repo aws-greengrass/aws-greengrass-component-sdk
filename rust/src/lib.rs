@@ -8,6 +8,9 @@
 #![warn(missing_docs, clippy::pedantic, clippy::cargo)]
 #![allow(clippy::enum_glob_use)]
 
+#[cfg(test)]
+extern crate std;
+
 mod c;
 mod error;
 mod ipc;

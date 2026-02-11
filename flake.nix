@@ -299,6 +299,7 @@
                     ./priv_include
                     ./src
                     ./rust
+                    ./mock
                   ];
                 };
                 cargoLock.lockFile = ./rust/Cargo.lock;
