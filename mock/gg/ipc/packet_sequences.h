@@ -52,4 +52,20 @@ GgipcPacketSequence gg_test_mqtt_subscribe_accepted_sequence(
     size_t messages
 );
 
+GgipcPacketSequence gg_get_config_subscribe_accepted_sequence(
+    int32_t stream_id, GgBuffer component_name, GgBufList key, size_t messages
+);
+
+GgipcPacketSequence gg_test_local_subscribe_accepted_sequence(
+    int32_t stream_id, GgBuffer topic, GgObject payload, size_t messages
+);
+
+GgipcPacketSequence gg_test_local_publish_accepted_sequence(
+    int32_t stream_id, GgBuffer topic, GgObject payload
+);
+
+GgipcPacketSequence gg_test_local_publish_error_sequence(
+    int32_t stream_id, GgBuffer topic, GgObject payload
+);
+
 #endif

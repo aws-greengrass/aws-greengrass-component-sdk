@@ -1,10 +1,13 @@
+#include "test_subscriptions.h"
 #include <gg/arena.h>
 #include <gg/buffer.h>
 #include <gg/error.h>
+#include <gg/eventstream/types.h>
 #include <gg/ipc/client.h>
 #include <gg/ipc/mock.h>
 #include <gg/ipc/packet_sequences.h>
 #include <gg/json_encode.h>
+#include <gg/list.h>
 #include <gg/log.h>
 #include <gg/map.h>
 #include <gg/object.h>
@@ -370,3 +373,67 @@ GG_TEST_DEFINE(update_configuration_server_error) {
 
     GG_TEST_ASSERT_OK(gg_process_wait(pid));
 }
+
+GgBuffer subscribe_component_name = GG_STR("test_component");
+static GgBufList subscribe_key_path
+    = GG_BUF_LIST(GG_STR("Nested"), GG_STR("Key"));
+static GgTestSubscribeContext subscribe_okay_context
+    = GG_TEST_OKAY_CONTEXT_INITIALIZER;
+
+static void config_updates_okay_response(
+    void *ctx,
+    GgBuffer component_name,
+    GgList key_path,
+    GgIpcSubscriptionHandle handle
+) {
+    TEST_ASSERT_EQUAL_PTR(
+        &subscribe_okay_context, (GgTestSubscribeContext *) ctx
+    );
+
+    GG_TEST_ASSERT_BUF_EQUAL_STR(subscribe_component_name, component_name);
+
+    TEST_ASSERT_EQUAL_size_t(subscribe_key_path.len, key_path.len);
+
+    GG_TEST_ASSERT_OK(gg_list_type_check(key_path, GG_TYPE_BUF));
+
+    for (size_t i = 0; i != subscribe_key_path.len; ++i) {
+        GG_TEST_ASSERT_BUF_EQUAL_STR(
+            subscribe_key_path.bufs[i], gg_obj_into_buf(key_path.items[i])
+        );
+    }
+
+    GG_TEST_SUBSCRIPTION_SIGNAL_CALLBACK(ctx, handle);
+}
+
+GG_TEST_DEFINE(subscribe_to_iot_core_okay) {
+    pid_t pid = fork();
+    TEST_ASSERT_TRUE_MESSAGE(pid >= 0, "fork failed");
+
+    if (pid == 0) {
+        gg_sdk_init();
+        GG_TEST_ASSERT_OK(ggipc_connect());
+        GG_TEST_ASSERT_OK(ggipc_subscribe_to_configuration_update(
+            &subscribe_component_name,
+            subscribe_key_path,
+            config_updates_okay_response,
+            &subscribe_okay_context,
+            &subscribe_okay_context.handle
+        ));
+        TEST_ASSERT_NOT_EQUAL_UINT32(0U, subscribe_okay_context.handle.val);
+
+        GG_TEST_ASSERT_SUBSCRIPTION_CALLED(&subscribe_okay_context, 5);
+
+        TEST_PASS();
+    }
+
+    GG_TEST_ASSERT_OK(gg_test_connect_request_disconnect_sequence(
+        gg_get_config_subscribe_accepted_sequence(
+            1,
+            subscribe_component_name,
+            subscribe_key_path,
+            GG_TEST_EXPECTED_TIMES_CALLED
+        ),
+        10
+    ));
+    GG_TEST_ASSERT_OK(gg_process_wait(pid));
+};
