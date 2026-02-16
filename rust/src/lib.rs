@@ -11,6 +11,7 @@
 #[cfg(test)]
 extern crate std;
 
+mod buffer;
 mod c;
 mod error;
 mod ipc;

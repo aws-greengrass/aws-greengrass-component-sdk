@@ -99,12 +99,7 @@ impl<'a> Object<'a> {
     #[must_use]
     pub fn buf(buf: &'a str) -> Self {
         Self {
-            c: unsafe {
-                c::gg_obj_buf(c::GgBuffer {
-                    data: buf.as_ptr().cast_mut(),
-                    len: buf.len(),
-                })
-            },
+            c: unsafe { c::gg_obj_buf(buf.into()) },
             phantom: PhantomData,
         }
     }
@@ -125,12 +120,7 @@ impl<'a> Object<'a> {
     #[must_use]
     pub fn list(list: &'a [Object<'a>]) -> Self {
         Self {
-            c: unsafe {
-                c::gg_obj_list(c::GgList {
-                    items: list.as_ptr().cast_mut().cast::<c::GgObject>(),
-                    len: list.len(),
-                })
-            },
+            c: unsafe { c::gg_obj_list(list.into()) },
             phantom: PhantomData,
         }
     }
@@ -151,12 +141,7 @@ impl<'a> Object<'a> {
     #[must_use]
     pub fn map(map: &'a [Kv<'a>]) -> Self {
         Self {
-            c: unsafe {
-                c::gg_obj_map(c::GgMap {
-                    pairs: map.as_ptr().cast_mut().cast::<c::GgKV>(),
-                    len: map.len(),
-                })
-            },
+            c: unsafe { c::gg_obj_map(map.into()) },
             phantom: PhantomData,
         }
     }
@@ -323,15 +308,7 @@ impl<'a> Kv<'a> {
     #[must_use]
     pub fn new(key: &'a str, value: Object<'a>) -> Self {
         Self {
-            c: unsafe {
-                c::gg_kv(
-                    c::GgBuffer {
-                        data: key.as_ptr().cast_mut(),
-                        len: key.len(),
-                    },
-                    value.c,
-                )
-            },
+            c: unsafe { c::gg_kv(key.into(), value.c) },
             phantom_key: PhantomData,
             phantom_value: PhantomData,
         }
@@ -408,16 +385,9 @@ impl Map<'_> {
     /// ```
     #[must_use]
     pub fn get(&self, key: &str) -> Option<&Object<'_>> {
-        let map = c::GgMap {
-            pairs: self.0.as_ptr().cast_mut().cast::<c::GgKV>(),
-            len: self.0.len(),
-        };
-        let key_buf = c::GgBuffer {
-            data: key.as_ptr().cast_mut(),
-            len: key.len(),
-        };
+        let map: c::GgMap = self.0.into();
         let mut result: *mut c::GgObject = ptr::null_mut();
-        if unsafe { c::gg_map_get(map, key_buf, &raw mut result) } {
+        if unsafe { c::gg_map_get(map, key.into(), &raw mut result) } {
             Some(unsafe {
                 NonNull::new(result.cast::<Object>())
                     .unwrap_unchecked()
@@ -435,9 +405,27 @@ impl<'a> From<&'a [Kv<'a>]> for Map<'a> {
     }
 }
 
+impl From<&[Kv<'_>]> for c::GgMap {
+    fn from(kvs: &[Kv<'_>]) -> Self {
+        Self {
+            pairs: kvs.as_ptr().cast_mut().cast::<c::GgKV>(),
+            len: kvs.len(),
+        }
+    }
+}
+
 impl<'a> From<&'a [Object<'a>]> for List<'a> {
     fn from(slice: &'a [Object<'a>]) -> Self {
         List(slice)
+    }
+}
+
+impl From<&[Object<'_>]> for c::GgList {
+    fn from(objs: &[Object<'_>]) -> Self {
+        Self {
+            items: objs.as_ptr().cast_mut().cast::<c::GgObject>(),
+            len: objs.len(),
+        }
     }
 }
 

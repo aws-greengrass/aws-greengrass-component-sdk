@@ -101,17 +101,8 @@ impl Sdk {
             return Err(Error::Failure);
         }
 
-        let socket_buf = c::GgBuffer {
-            data: socket_path.as_ptr().cast_mut(),
-            len: socket_path.len(),
-        };
-        let token_buf = c::GgBuffer {
-            data: auth_token.as_ptr().cast_mut(),
-            len: auth_token.len(),
-        };
-
         Result::from(unsafe {
-            c::ggipc_connect_with_token(socket_buf, token_buf)
+            c::ggipc_connect_with_token(socket_path.into(), auth_token.into())
         })?;
 
         Ok(())
@@ -147,17 +138,8 @@ impl Sdk {
         topic: &str,
         payload: &[Kv<'_>],
     ) -> Result<()> {
-        let topic_buf = c::GgBuffer {
-            data: topic.as_ptr().cast_mut(),
-            len: topic.len(),
-        };
-        let payload_map = c::GgMap {
-            pairs: payload.as_ptr() as *mut c::GgKV,
-            len: payload.len(),
-        };
-
         Result::from(unsafe {
-            c::ggipc_publish_to_topic_json(topic_buf, payload_map)
+            c::ggipc_publish_to_topic_json(topic.into(), payload.into())
         })
     }
 
@@ -188,17 +170,8 @@ impl Sdk {
         topic: &str,
         payload: &[u8],
     ) -> Result<()> {
-        let topic_buf = c::GgBuffer {
-            data: topic.as_ptr().cast_mut(),
-            len: topic.len(),
-        };
-        let payload_buf = c::GgBuffer {
-            data: payload.as_ptr().cast_mut(),
-            len: payload.len(),
-        };
-
         Result::from(unsafe {
-            c::ggipc_publish_to_topic_binary(topic_buf, payload_buf)
+            c::ggipc_publish_to_topic_binary(topic.into(), payload.into())
         })
     }
 
@@ -248,17 +221,12 @@ impl Sdk {
             cb(topic_str, unpacked);
         }
 
-        let topic_buf = c::GgBuffer {
-            data: topic.as_ptr().cast_mut(),
-            len: topic.len(),
-        };
-
         let ctx = callback as *const F;
         let mut handle = c::GgIpcSubscriptionHandle { val: 0 };
 
         Result::from(unsafe {
             c::ggipc_subscribe_to_topic(
-                topic_buf,
+                topic.into(),
                 Some(trampoline::<F>),
                 ctx.cast::<ffi::c_void>().cast_mut(),
                 &raw mut handle,
@@ -300,17 +268,8 @@ impl Sdk {
         payload: &[u8],
         qos: Qos,
     ) -> Result<()> {
-        let topic_buf = c::GgBuffer {
-            data: topic.as_ptr().cast_mut(),
-            len: topic.len(),
-        };
-        let payload_buf = c::GgBuffer {
-            data: payload.as_ptr().cast_mut(),
-            len: payload.len(),
-        };
-
         Result::from(unsafe {
-            c::ggipc_publish_to_iot_core(topic_buf, payload_buf, qos as u8)
+            c::ggipc_publish_to_iot_core(topic.into(), payload.into(), qos as u8)
         })
     }
 
@@ -346,17 +305,12 @@ impl Sdk {
             cb(topic_str, payload_bytes);
         }
 
-        let topic_buf = c::GgBuffer {
-            data: topic_filter.as_ptr().cast_mut(),
-            len: topic_filter.len(),
-        };
-
         let ctx = callback as *const F;
         let mut handle = c::GgIpcSubscriptionHandle { val: 0 };
 
         Result::from(unsafe {
             c::ggipc_subscribe_to_iot_core(
-                topic_buf,
+                topic_filter.into(),
                 qos as u8,
                 Some(trampoline::<F>),
                 ctx.cast::<ffi::c_void>().cast_mut(),
@@ -389,10 +343,7 @@ impl Sdk {
         let mut c_key_path_mem = [MaybeUninit::uninit(); MAX_KEY_PATH_LEN];
         let c_key_path = key_path_to_buf_list(key_path, &mut c_key_path_mem)?;
 
-        let component_buf = component_name.map(|name| c::GgBuffer {
-            data: name.as_ptr().cast_mut(),
-            len: name.len(),
-        });
+        let component_buf = component_name.map(c::GgBuffer::from);
 
         let mem = c::GgBuffer {
             data: result_mem.as_mut_ptr().cast::<u8>(),
@@ -431,10 +382,7 @@ impl Sdk {
         let mut c_key_path_mem = [MaybeUninit::uninit(); MAX_KEY_PATH_LEN];
         let c_key_path = key_path_to_buf_list(key_path, &mut c_key_path_mem)?;
 
-        let component_buf = component_name.map(|name| c::GgBuffer {
-            data: name.as_ptr().cast_mut(),
-            len: name.len(),
-        });
+        let component_buf = component_name.map(c::GgBuffer::from);
 
         let mut value = c::GgBuffer {
             data: result_mem.as_mut_ptr().cast::<u8>(),
@@ -551,12 +499,7 @@ impl Sdk {
     /// # Errors
     /// Returns error if restart fails.
     pub fn restart_component(&self, component_name: &str) -> Result<()> {
-        let component_buf = c::GgBuffer {
-            data: component_name.as_ptr().cast_mut(),
-            len: component_name.len(),
-        };
-
-        Result::from(unsafe { c::ggipc_restart_component(component_buf) })
+        Result::from(unsafe { c::ggipc_restart_component(component_name.into()) })
     }
 
     /// Subscribe to component configuration updates.
@@ -613,10 +556,7 @@ impl Sdk {
         let mut c_key_path_mem = [MaybeUninit::uninit(); MAX_KEY_PATH_LEN];
         let c_key_path = key_path_to_buf_list(key_path, &mut c_key_path_mem)?;
 
-        let component_buf = component_name.map(|name| c::GgBuffer {
-            data: name.as_ptr().cast_mut(),
-            len: name.len(),
-        });
+        let component_buf = component_name.map(c::GgBuffer::from);
 
         let ctx = callback as *const F;
         let mut handle = c::GgIpcSubscriptionHandle { val: 0 };
@@ -697,24 +637,11 @@ impl Sdk {
             .into()
         }
 
-        let operation_buf = c::GgBuffer {
-            data: operation.as_ptr().cast_mut(),
-            len: operation.len(),
-        };
-        let service_model_type_buf = c::GgBuffer {
-            data: service_model_type.as_ptr().cast_mut(),
-            len: service_model_type.len(),
-        };
-        let params_map = c::GgMap {
-            pairs: params.as_ptr() as *mut c::GgKV,
-            len: params.len(),
-        };
-
         Result::from(unsafe {
             c::ggipc_call(
-                operation_buf,
-                service_model_type_buf,
-                params_map,
+                operation.into(),
+                service_model_type.into(),
+                params.into(),
                 Some(result_trampoline::<F>),
                 Some(error_trampoline::<F>),
                 (&raw mut callback).cast::<ffi::c_void>(),
@@ -809,27 +736,14 @@ impl Sdk {
             cb(aux, smt, map).into()
         }
 
-        let operation_buf = c::GgBuffer {
-            data: operation.as_ptr().cast_mut(),
-            len: operation.len(),
-        };
-        let service_model_type_buf = c::GgBuffer {
-            data: service_model_type.as_ptr().cast_mut(),
-            len: service_model_type.len(),
-        };
-        let params_map = c::GgMap {
-            pairs: params.as_ptr() as *mut c::GgKV,
-            len: params.len(),
-        };
-
         let mut handle = c::GgIpcSubscriptionHandle { val: 0 };
         let ctx = sub_callback as *const G;
 
         Result::from(unsafe {
             c::ggipc_subscribe(
-                operation_buf,
-                service_model_type_buf,
-                params_map,
+                operation.into(),
+                service_model_type.into(),
+                params.into(),
                 Some(result_trampoline::<F>),
                 Some(error_trampoline::<F>),
                 (&raw mut response_callback).cast::<ffi::c_void>(),
@@ -881,10 +795,7 @@ fn key_path_to_buf_list(
         return Err(Error::Range);
     }
     for (i, k) in key_path.iter().enumerate() {
-        bufs[i].write(c::GgBuffer {
-            data: k.as_ptr().cast_mut(),
-            len: k.len(),
-        });
+      bufs[i].write((*k).into());
     }
     Ok(c::GgBufList {
         bufs: bufs.as_mut_ptr().cast(),
@@ -1025,18 +936,9 @@ mod test {
         let seq = unsafe {
             c::gg_test_mqtt_publish_accepted_sequence(
                 1,
-                c::GgBuffer {
-                    data: topic.as_ptr().cast_mut(),
-                    len: topic.len(),
-                },
-                c::GgBuffer {
-                    data: payload_base64.as_ptr().cast_mut(),
-                    len: payload_base64.len(),
-                },
-                c::GgBuffer {
-                    data: qos.as_ptr().cast_mut(),
-                    len: qos.len(),
-                },
+                topic.into(),
+                payload_base64.into(),
+                qos.into(),
             )
         };
         run_ipc_sequence_test(seq, || {
@@ -1072,18 +974,9 @@ mod test {
         let seq = unsafe {
             c::gg_test_mqtt_publish_error_sequence(
                 1,
-                c::GgBuffer {
-                    data: topic.as_ptr().cast_mut(),
-                    len: topic.len(),
-                },
-                c::GgBuffer {
-                    data: payload_base64.as_ptr().cast_mut(),
-                    len: payload_base64.len(),
-                },
-                c::GgBuffer {
-                    data: qos.as_ptr().cast_mut(),
-                    len: qos.len(),
-                },
+                topic.into(),
+                payload_base64.into(),
+                qos.into(),
             )
         };
         run_ipc_sequence_test(seq, || {
@@ -1113,18 +1006,9 @@ mod test {
         let seq = unsafe {
             c::gg_test_mqtt_subscribe_accepted_sequence(
                 1,
-                c::GgBuffer {
-                    data: topic.as_ptr().cast_mut(),
-                    len: topic.len(),
-                },
-                c::GgBuffer {
-                    data: payload_base64.as_ptr().cast_mut(),
-                    len: payload_base64.len(),
-                },
-                c::GgBuffer {
-                    data: qos.as_ptr().cast_mut(),
-                    len: qos.len(),
-                },
+                topic.into(),
+                payload_base64.into(),
+                qos.into(),
                 expected_calls,
             )
         };
