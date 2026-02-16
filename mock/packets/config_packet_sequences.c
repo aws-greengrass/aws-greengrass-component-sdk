@@ -3,6 +3,7 @@
 #include "packets/packets.h"
 #include <assert.h>
 #include <gg/buffer.h>
+#include <gg/error.h>
 #include <gg/map.h>
 #include <gg/object.h>
 #include <gg/types.h>
@@ -208,4 +209,107 @@ GgipcPacketSequence gg_test_config_update_rejected_sequence(int32_t stream_id) {
     );
     GgipcPacket response = gg_test_ipc_service_error_packet(stream_id);
     return (GgipcPacketSequence) { .packets = { request, response }, .len = 2 };
+}
+
+static GgipcPacket gg_test_config_update_packet(
+    int32_t stream_id, GgBuffer component_name, GgBufList key_path
+) {
+    static GgObject list[GG_MAX_OBJECT_DEPTH + 1U];
+    GgObjVec vec = GG_OBJ_VEC(list);
+    assert(key_path.len < sizeof(list) / sizeof(list[0]));
+    GgError ret = GG_ERR_OK;
+
+    GG_BUF_LIST_FOREACH (key, key_path) {
+        gg_obj_vec_chain_push(&ret, &vec, gg_obj_buf(*key));
+    }
+    assert(ret == GG_ERR_OK);
+
+    static GgKV inner_payload[2];
+    inner_payload[0] = gg_kv(GG_STR("keyPath"), gg_obj_list(vec.list));
+    inner_payload[1]
+        = gg_kv(GG_STR("componentName"), gg_obj_buf(component_name));
+
+    size_t inner_payload_len = sizeof(inner_payload) / sizeof(inner_payload[0]);
+    static GgKV payload[1];
+    payload[0] = gg_kv(
+        GG_STR("configurationUpdateEvent"),
+        gg_obj_map((GgMap) { .len = inner_payload_len, .pairs = inner_payload })
+    );
+
+    size_t payload_len = 1;
+
+    return (GgipcPacket) {
+        .direction = SERVER_TO_CLIENT,
+        .has_payload = true,
+        .payload = gg_obj_map((GgMap) { .pairs = payload, .len = payload_len }),
+        .headers = GG_IPC_SUBSCRIBE_MESSAGE_HEADERS(
+            stream_id, "aws.greengrass#ConfigurationUpdateEvents"
+        ),
+        .header_count = GG_IPC_SUBSCRIBE_MESSAGE_HEADERS_COUNT
+    };
+}
+
+static GgipcPacket gg_test_config_subscribe_request_packet(
+    int32_t stream_id, GgBuffer component_name, GgBufList key_path
+) {
+    static GgObject list[GG_MAX_OBJECT_DEPTH + 1U];
+    GgObjVec vec = GG_OBJ_VEC(list);
+    assert(key_path.len < sizeof(list) / sizeof(list[0]));
+    GgError ret = GG_ERR_OK;
+
+    GG_BUF_LIST_FOREACH (key, key_path) {
+        gg_obj_vec_chain_push(&ret, &vec, gg_obj_buf(*key));
+    }
+    assert(ret == GG_ERR_OK);
+
+    static GgKV payload[2];
+    payload[0] = gg_kv(GG_STR("keyPath"), gg_obj_list(vec.list));
+    payload[1] = gg_kv(GG_STR("componentName"), gg_obj_buf(component_name));
+
+    size_t payload_len = sizeof(payload) / sizeof(payload[0]);
+
+    return (GgipcPacket) {
+        .direction = CLIENT_TO_SERVER,
+        .has_payload = true,
+        .payload = gg_obj_map((GgMap) { .pairs = payload, .len = payload_len }),
+        .headers = GG_IPC_REQUEST_HEADERS(
+            stream_id, "aws.greengrass#SubscribeToConfigurationUpdate"
+        ),
+        .header_count = GG_IPC_SUBSCRIBE_MESSAGE_HEADERS_COUNT
+    };
+}
+
+static GgipcPacket gg_test_config_subscribe_accepted_packet(int32_t stream_id) {
+    return (GgipcPacket) {
+        .direction = SERVER_TO_CLIENT,
+        .has_payload = false,
+        .headers = GG_IPC_SUBSCRIBE_MESSAGE_HEADERS(
+            stream_id, "aws.greengrass#SubscribeToConfigurationUpdateRequest"
+        ),
+        .header_count = GG_IPC_SUBSCRIBE_MESSAGE_HEADERS_COUNT
+    };
+}
+
+GgipcPacketSequence gg_get_config_subscribe_accepted_sequence(
+    int32_t stream_id, GgBuffer component_name, GgBufList key, size_t messages
+) {
+    GgipcPacket response_packet
+        = gg_test_config_update_packet(stream_id, component_name, key);
+
+    GgipcPacketSequence seq
+        = { .packets = { gg_test_config_subscribe_request_packet(
+                             stream_id, component_name, key
+                         ),
+                         gg_test_config_subscribe_accepted_packet(stream_id) },
+            .len = 2 };
+
+    size_t max_len = (sizeof(seq.packets) / sizeof(seq.packets[0]));
+    assert(messages <= (max_len - seq.len));
+
+    for (uint32_t i = 0; (i != messages) && (seq.len != max_len);
+         ++i, ++seq.len) {
+        seq.packets[seq.len] = response_packet;
+    }
+
+    return seq;
 }

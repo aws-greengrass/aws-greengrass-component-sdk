@@ -133,4 +133,20 @@ GgipcPacket gg_test_mqtt_message_packet(
     int32_t stream_id, GgBuffer topic, GgBuffer payload_base64
 );
 
+GgipcPacket gg_test_local_publish_request_packet(
+    int32_t stream_id, GgBuffer topic, GgObject payload
+);
+
+GgipcPacket gg_test_local_publish_accepted_packet(int32_t stream_id);
+
+GgipcPacket gg_test_local_message_packet(
+    int32_t stream_id, GgBuffer topic, GgObject payload
+);
+
+GgipcPacket gg_test_local_subscribe_request_packet(
+    int32_t stream_id, GgBuffer topic
+);
+
+GgipcPacket gg_test_local_subscribe_accepted_packet(int32_t stream_id);
+
 #endif
