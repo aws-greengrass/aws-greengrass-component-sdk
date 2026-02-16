@@ -1,3 +1,4 @@
+#include "test_subscriptions.h"
 #include <gg/ipc/client.h>
 #include <gg/ipc/mock.h>
 #include <gg/ipc/packet_sequences.h>
@@ -131,37 +132,20 @@ GG_TEST_DEFINE(publish_to_iot_core_invalid_qos) {
     GG_TEST_ASSERT_OK(gg_process_wait(pid));
 }
 
-typedef struct {
-    pthread_mutex_t mut;
-    _Atomic size_t calls_remaining;
-    pthread_cond_t cond;
-    GgIpcSubscriptionHandle handle;
-} SubscribeOkayContext;
-
-static const size_t EXPECTED_TIMES_CALLED = 3;
-static SubscribeOkayContext subscribe_okay_context
-    = { .calls_remaining = EXPECTED_TIMES_CALLED,
-        .mut = PTHREAD_MUTEX_INITIALIZER,
-        .cond = PTHREAD_COND_INITIALIZER,
-        .handle = { 0 } };
+static GgTestSubscribeContext subscribe_okay_context
+    = GG_TEST_OKAY_CONTEXT_INITIALIZER;
 
 static void subscribe_to_iot_core_okay_subscription_response(
     void *ctx, GgBuffer topic, GgBuffer payload, GgIpcSubscriptionHandle handle
 ) {
-    SubscribeOkayContext *context = ctx;
-    TEST_ASSERT_EQUAL_PTR(&subscribe_okay_context, context);
+    TEST_ASSERT_EQUAL_PTR(
+        &subscribe_okay_context, (GgTestSubscribeContext *) ctx
+    );
     GG_TEST_ASSERT_BUF_EQUAL_STR(GG_STR("my/topic"), topic);
 
     GG_TEST_ASSERT_BUF_EQUAL(payloads[0].payload, payload);
 
-    TEST_ASSERT_EQUAL_UINT32(context->handle.val, handle.val);
-
-    size_t calls_remaining_prev
-        = atomic_fetch_sub(&context->calls_remaining, 1);
-    if ((calls_remaining_prev - 1 == 0)
-        || (calls_remaining_prev > EXPECTED_TIMES_CALLED)) {
-        pthread_cond_signal(&context->cond);
-    }
+    GG_TEST_SUBSCRIPTION_SIGNAL_CALLBACK(ctx, handle);
 }
 
 GG_TEST_DEFINE(subscribe_to_iot_core_okay) {
@@ -179,39 +163,10 @@ GG_TEST_DEFINE(subscribe_to_iot_core_okay) {
             &subscribe_okay_context.handle
         ));
 
-        int pthread_ret = 0;
-        size_t calls_remaining;
-        struct timespec wait_until;
-        clock_gettime(CLOCK_REALTIME, &wait_until);
-        wait_until.tv_sec += 1;
+        TEST_ASSERT_NOT_EQUAL_UINT32(0U, subscribe_okay_context.handle.val);
 
-        pthread_mutex_lock(&subscribe_okay_context.mut);
-        while (((calls_remaining
-                 = atomic_load(&subscribe_okay_context.calls_remaining))
-                != 0)
-               && (calls_remaining <= EXPECTED_TIMES_CALLED)) {
-            pthread_ret = pthread_cond_timedwait(
-                &subscribe_okay_context.cond,
-                &subscribe_okay_context.mut,
-                &wait_until
-            );
-            if (pthread_ret != 0) {
-                GG_LOGW("pthread_cond_timedwait timed out");
-                calls_remaining
-                    = atomic_load(&subscribe_okay_context.calls_remaining);
-                break;
-            }
-        }
-        pthread_mutex_unlock(&subscribe_okay_context.mut);
+        GG_TEST_ASSERT_SUBSCRIPTION_CALLED(&subscribe_okay_context, 5);
 
-        TEST_ASSERT_EQUAL_size_t_MESSAGE(
-            EXPECTED_TIMES_CALLED,
-            EXPECTED_TIMES_CALLED - calls_remaining,
-            "Subscription not called the expected number of times."
-        );
-        TEST_ASSERT_EQUAL_MESSAGE(
-            0, pthread_ret, "Timed out waiting for subscription response(s)"
-        );
         TEST_PASS();
     }
 
@@ -221,7 +176,7 @@ GG_TEST_DEFINE(subscribe_to_iot_core_okay) {
             GG_STR("my/topic"),
             payloads[0].payload_base64,
             GG_STR("0"),
-            EXPECTED_TIMES_CALLED
+            GG_TEST_EXPECTED_TIMES_CALLED
         ),
         30
     ));
