@@ -111,6 +111,8 @@ GgipcPacket gg_test_config_get_object_accepted_packet(
 /// server->client generic ServiceError response
 GgipcPacket gg_test_ipc_service_error_packet(int32_t stream_id);
 
+GgipcPacket gg_test_ipc_permissions_error_packet(int32_t stream_id);
+
 GgipcPacket gg_test_ipc_error_packet(
     int32_t stream_id, GgBuffer error_code, GgBuffer message
 );
@@ -149,4 +151,17 @@ GgipcPacket gg_test_local_subscribe_request_packet(
 
 GgipcPacket gg_test_local_subscribe_accepted_packet(int32_t stream_id);
 
+GgipcPacket gg_test_update_state_request_packet(
+    int32_t stream_id, GgBuffer state
+);
+
+GgipcPacket gg_test_update_state_response_packet(int32_t stream_id);
+
+GgipcPacket gg_test_restart_component_request_packet(
+    int32_t stream_id, GgBuffer component_name
+);
+
+GgipcPacket gg_test_restart_component_response_packet(
+    int32_t stream_id, GgBuffer restart_status
+);
 #endif
