@@ -39,3 +39,11 @@ GgipcPacket gg_test_ipc_service_error_packet(int32_t stream_id) {
         stream_id, GG_STR("ServiceError"), GG_STR("Unknown service model.")
     );
 }
+
+GgipcPacket gg_test_ipc_permissions_error_packet(int32_t stream_id) {
+    return gg_test_ipc_error_packet(
+        stream_id,
+        GG_STR("UnauthorizedError"),
+        GG_STR("Component is not permitted to use this IPC method.")
+    );
+}

@@ -68,4 +68,20 @@ GgipcPacketSequence gg_test_local_publish_error_sequence(
     int32_t stream_id, GgBuffer topic, GgObject payload
 );
 
+GgipcPacketSequence gg_test_update_state_accepted_sequence(
+    int32_t stream_id, GgBuffer state
+);
+
+GgipcPacketSequence gg_test_update_state_error_sequence(
+    int32_t stream_id, GgBuffer state
+);
+
+GgipcPacketSequence gg_test_restart_component_accepted_sequence(
+    int32_t stream_id, GgBuffer component_name, GgBuffer restart_status
+);
+
+GgipcPacketSequence gg_test_restart_component_error_sequence(
+    int32_t stream_id, GgBuffer component_name
+);
+
 #endif
