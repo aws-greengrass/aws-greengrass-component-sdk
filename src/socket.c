@@ -56,7 +56,7 @@ GgError gg_connect(GgBuffer path, int *fd) {
     }
 
     // To prevent deadlocking on hanged server, add a timeout
-    struct timeval timeout = { .tv_sec = 5 };
+    struct timeval timeout = { .tv_sec = 10 };
     int sys_ret = setsockopt(
         sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)
     );
