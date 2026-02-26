@@ -1,0 +1,38 @@
+{
+  "RecipeFormatVersion": "2020-01-25",
+  "ComponentName": "com.example.UpdateThingShadow",
+  "ComponentVersion": "1.0.0",
+  "ComponentDescription": "A component that updates a thing shadow.",
+  "ComponentPublisher": "Amazon",
+  "ComponentConfiguration": {
+    "DefaultConfiguration": {
+      "accessControl": {
+        "aws.greengrass.ShadowManager": {
+          "com.example.UpdateThingShadow:shadow:1": {
+            "policyDescription": "Allows updating thing shadows.",
+            "operations": ["aws.greengrass#UpdateThingShadow"],
+            "resources": ["*"]
+          }
+        }
+      }
+    }
+  },
+  "Manifests": [
+    {
+      "Platform": {
+        "os": "linux"
+      },
+      "Lifecycle": {
+        "run": "{artifacts:path}/sample_update_thing_shadow"
+      },
+      "Artifacts": [
+        {
+          "URI": "s3://amzn-s3-demo-bucket/artifacts/com.example.UpdateThingShadow/1.0.0/sample_update_thing_shadow",
+          "Permission": {
+            "Execute": "OWNER"
+          }
+        }
+      ]
+    }
+  ]
+}
