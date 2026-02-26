@@ -156,6 +156,55 @@ GgError ggipc_update_state(GgComponentState state);
 /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-component-lifecycle.html
 GgError ggipc_restart_component(GgBuffer component_name);
 
+/// Get the shadow for a thing.
+/// Retrieves the shadow document for the specified thing and shadow name.
+/// `payload` must point to a buffer large enough to hold the decoded result.
+/// Requires aws.greengrass#GetThingShadow authorization.
+/// See:
+/// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-shadows.html#ipc-operation-getthingshadow>
+ACCESS(read_write, 3)
+GgError ggipc_get_thing_shadow(
+    GgBuffer thing_name, GgBuffer shadow_name, GgBuffer *payload
+);
+
+/// Update the shadow for a thing.
+/// Updates the shadow document for the specified thing and shadow name.
+/// `payload` contains the shadow update document.
+/// `response` must point to a buffer large enough to hold the decoded result.
+/// Requires aws.greengrass#UpdateThingShadow authorization.
+/// See:
+/// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-shadows.html#ipc-operation-updatethingshadow>
+ACCESS(read_write, 4)
+GgError ggipc_update_thing_shadow(
+    GgBuffer thing_name,
+    GgBuffer shadow_name,
+    GgBuffer payload,
+    GgBuffer *response
+);
+
+/// Delete the shadow for a thing.
+/// Deletes the shadow document for the specified thing and shadow name.
+/// Requires aws.greengrass#DeleteThingShadow authorization.
+/// See:
+/// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-shadows.html#ipc-operation-deletethingshadow>
+GgError ggipc_delete_thing_shadow(GgBuffer thing_name, GgBuffer shadow_name);
+
+/// List named shadows for a thing.
+/// Lists all named shadows for the specified thing.
+/// `page_token` can be empty for the first request.
+/// `results` will contain the list of shadow names.
+/// `next_token` will contain the pagination token if there are more results.
+/// Requires aws.greengrass#ListNamedShadowsForThing authorization.
+/// See:
+/// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-shadows.html#ipc-operation-listnamedshadowsforthing>
+ACCESS(read_write, 3) ACCESS(read_write, 4)
+GgError ggipc_list_named_shadows_for_thing(
+    GgBuffer thing_name,
+    GgBuffer page_token,
+    GgList *results,
+    GgBuffer *next_token
+);
+
 typedef void GgIpcSubscribeToConfigurationUpdateCallback(
     void *ctx,
     GgBuffer component_name,
