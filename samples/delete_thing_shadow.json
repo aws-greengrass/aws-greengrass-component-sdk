@@ -1,0 +1,38 @@
+{
+  "RecipeFormatVersion": "2020-01-25",
+  "ComponentName": "com.example.DeleteThingShadow",
+  "ComponentVersion": "1.0.0",
+  "ComponentDescription": "A component that deletes a thing shadow.",
+  "ComponentPublisher": "Amazon",
+  "ComponentConfiguration": {
+    "DefaultConfiguration": {
+      "accessControl": {
+        "aws.greengrass.ShadowManager": {
+          "com.example.DeleteThingShadow:shadow:1": {
+            "policyDescription": "Allows deleting thing shadows.",
+            "operations": ["aws.greengrass#DeleteThingShadow"],
+            "resources": ["*"]
+          }
+        }
+      }
+    }
+  },
+  "Manifests": [
+    {
+      "Platform": {
+        "os": "linux"
+      },
+      "Lifecycle": {
+        "run": "{artifacts:path}/sample_delete_thing_shadow"
+      },
+      "Artifacts": [
+        {
+          "URI": "s3://amzn-s3-demo-bucket/artifacts/com.example.DeleteThingShadow/1.0.0/sample_delete_thing_shadow",
+          "Permission": {
+            "Execute": "OWNER"
+          }
+        }
+      ]
+    }
+  ]
+}
