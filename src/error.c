@@ -42,8 +42,11 @@ const char *gg_strerror(GgError err) {
         return "EXPECTED";
     case GG_ERR_TIMEOUT:
         return "TIMEOUT";
+    case GG_ERR_UNAUTHORIZED:
+        return "UNAUTHORIZED";
+    case GG_ERR_CONFLICT:
+        return "CONFLICT";
     }
-
     assert(false);
     return "";
 }

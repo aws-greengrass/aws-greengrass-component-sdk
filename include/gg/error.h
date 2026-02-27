@@ -46,6 +46,10 @@ typedef enum NODISCARD GgError {
     GG_ERR_EXPECTED,
     /// Request timed out
     GG_ERR_TIMEOUT,
+    /// Lack of permission or authorization policy
+    GG_ERR_UNAUTHORIZED,
+    /// Version mismatch
+    GG_ERR_CONFLICT
 } GgError;
 
 /// Convert a GgError to a string representation.

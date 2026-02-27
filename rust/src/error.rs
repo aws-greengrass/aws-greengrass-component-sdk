@@ -42,6 +42,10 @@ pub enum Error {
     Expected = GG_ERR_EXPECTED as u32,
     /// Request timed out
     Timeout = GG_ERR_TIMEOUT as u32,
+    /// Request unauthorized
+    Unauthorized = GG_ERR_UNAUTHORIZED as u32,
+    /// Request conflicts with current version
+    Conflict = GG_ERR_CONFLICT as u32,
 }
 
 impl fmt::Display for Error {
@@ -77,6 +81,8 @@ impl From<Error> for c::GgError {
             Error::Remote => GG_ERR_REMOTE,
             Error::Expected => GG_ERR_EXPECTED,
             Error::Timeout => GG_ERR_TIMEOUT,
+            Error::Unauthorized => GG_ERR_UNAUTHORIZED,
+            Error::Conflict => GG_ERR_CONFLICT,
         }
     }
 }
@@ -110,6 +116,8 @@ impl From<c::GgError> for Result<()> {
             GG_ERR_REMOTE => Err(Error::Remote),
             GG_ERR_EXPECTED => Err(Error::Expected),
             GG_ERR_TIMEOUT => Err(Error::Timeout),
+            GG_ERR_UNAUTHORIZED => Err(Error::Unauthorized),
+            GG_ERR_CONFLICT => Err(Error::Conflict),
         }
     }
 }
