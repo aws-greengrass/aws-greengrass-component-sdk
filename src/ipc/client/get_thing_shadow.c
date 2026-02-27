@@ -67,7 +67,7 @@ GgError ggipc_get_thing_shadow(
         gg_kv(GG_STR("shadowName"), gg_obj_buf(shadow_name))
     );
 
-    GG_LOGE("Going to send the IPC request")
+    GG_LOGE("Going to send the IPC request");
     return ggipc_call(
         GG_STR("aws.greengrass#GetThingShadow"),
         GG_STR("aws.greengrass#GetThingShadowRequest"),

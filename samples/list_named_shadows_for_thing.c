@@ -27,7 +27,10 @@ int main(void) {
     GgBuffer next_token = GG_BUF(next_token_buf);
 
     err = ggipc_list_named_shadows_for_thing(
-        gg_buffer_from_null_term(THING_NAME), GG_STR(""), &results, &next_token
+        gg_buffer_from_null_term((char *) THING_NAME),
+        GG_STR(""),
+        &results,
+        &next_token
     );
     if (err != GG_ERR_OK) {
         fprintf(

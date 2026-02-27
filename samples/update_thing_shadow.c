@@ -23,14 +23,14 @@ int main(void) {
     }
 
     const char *update_doc = "{\"state\":{\"desired\":{\"speed\":25}}}";
-    GgBuffer payload = gg_buffer_from_null_term(update_doc);
+    GgBuffer payload = gg_buffer_from_null_term((char *) update_doc);
 
     uint8_t response_buf[8192];
     GgBuffer response = GG_BUF(response_buf);
 
     err = ggipc_update_thing_shadow(
-        gg_buffer_from_null_term(THING_NAME),
-        gg_buffer_from_null_term(SHADOW_NAME),
+        gg_buffer_from_null_term((char *) THING_NAME),
+        gg_buffer_from_null_term((char *) SHADOW_NAME),
         payload,
         &response
     );
