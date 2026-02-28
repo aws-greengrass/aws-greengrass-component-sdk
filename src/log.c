@@ -2,6 +2,7 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#include <errno.h>
 #include <gg/cleanup.h>
 #include <gg/log.h>
 #include <pthread.h>
@@ -51,6 +52,8 @@ void gg_log(
     ...
 ) {
     static pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+    int saved_errno = errno;
 
     const char *prefix = "";
 
@@ -102,10 +105,13 @@ void gg_log(
 
         va_list args;
         va_start(args, format);
+        errno = saved_errno;
         vfprintf(stderr, format, args);
         va_end(args);
 
         fprintf(stderr, "\n");
         fflush(stderr);
     }
+
+    errno = saved_errno;
 }
