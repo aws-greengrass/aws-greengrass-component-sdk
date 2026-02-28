@@ -22,7 +22,7 @@ void gg_log(
     const char *tag,
     const char *format,
     ...
-) CBMC_CONTRACT(requires(cbmc_restrict(format)));
+);
 
 /// No-op logging fn for enabling type checking disabled logging macros.
 ALWAYS_INLINE FORMAT(printf, 1, 2)

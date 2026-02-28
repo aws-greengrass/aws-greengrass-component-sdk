@@ -222,7 +222,7 @@
                 nativeBuildInputs = [ cbmc python3 ];
                 buildPhase = ''
                   ${cmake}/bin/cmake -B build -D CMAKE_BUILD_TYPE=Debug \
-                    -D GG_LOG_LEVEL=TRACE
+                    -D GG_LOG_LEVEL=NONE
                   python ${./misc/check_contracts.py} src
                   touch $out
                 '';
