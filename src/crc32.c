@@ -59,3 +59,35 @@ uint32_t gg_update_crc(uint32_t crc, GgBuffer buf) {
     }
     return ~c;
 }
+
+#ifdef GG_SDK_TESTING
+
+#include <gg/test.h>
+#include <unity.h>
+
+GG_TEST_DEFINE(crc_check) {
+    // CRC of empty string does not update the CRC
+    TEST_ASSERT_EQUAL_UINT32(0, gg_update_crc(0, GG_STR("")));
+    TEST_ASSERT_EQUAL_UINT32(1234, gg_update_crc(1234, GG_STR("")));
+
+    /* The first four of the last eight bytes of gzip's compressed output
+    is the uncompressed input's CRC. Test values created with this command:
+
+    echo -n "teststring" | gzip -1 | tail -c 8 | head -c 4 | \
+    hexdump -e '1/4 "0x%08XU" "\n"'
+
+    */
+
+    TEST_ASSERT_EQUAL_UINT32(
+        0x1F58F83EU, gg_update_crc(0, GG_STR("teststring"))
+    );
+    TEST_ASSERT_EQUAL_UINT32(
+        0xCBF43926U, gg_update_crc(0, GG_STR("123456789"))
+    );
+    TEST_ASSERT_EQUAL_UINT32(
+        0x414FA339U,
+        gg_update_crc(0, GG_STR("The quick brown fox jumps over the lazy dog"))
+    );
+}
+
+#endif
