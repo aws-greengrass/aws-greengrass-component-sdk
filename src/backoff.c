@@ -42,6 +42,10 @@ GgError gg_backoff(
         assert(false);
         return GG_ERR_UNSUPPORTED;
     }
+    if (max_ms == 0) {
+        assert(false);
+        return GG_ERR_UNSUPPORTED;
+    }
 
     uint32_t current_max_ms = base_ms;
     uint32_t attempts = 0;
