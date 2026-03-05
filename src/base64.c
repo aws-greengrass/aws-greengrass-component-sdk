@@ -165,3 +165,117 @@ GgError gg_base64_encode(
     *result = (GgBuffer) { .data = mem, .len = base64_len };
     return GG_ERR_OK;
 }
+
+#ifdef GG_SDK_TESTING
+#include <gg/test.h>
+#include <gg/types.h>
+#include <unity.h>
+#include <unity_internals.h>
+
+static inline void base64_encode_test(
+    GgBuffer encoded, GgBuffer decoded, unsigned line_number
+) {
+    static uint8_t mem[1024];
+    GgArena arena = gg_arena_init(GG_BUF(mem));
+
+    GgBuffer actual;
+    gg_test_assert_ok(
+        gg_base64_encode(decoded, &arena, &actual),
+        "Failed to encode string",
+        line_number
+    );
+
+    gg_test_assert_buf_equal_str(encoded, actual, NULL, line_number);
+}
+
+#define BASE64_ENCODE_TEST(encoded, decoded) \
+    base64_encode_test(encoded, decoded, __LINE__)
+
+GG_TEST_DEFINE(base64_encode_okay) {
+    // spell:disable
+    BASE64_ENCODE_TEST(GG_STR("emVybyBwYWRkaW5n"), GG_STR("zero padding"));
+    BASE64_ENCODE_TEST(GG_STR("aGFzIHBhZGRpbmc="), GG_STR("has padding"));
+    BASE64_ENCODE_TEST(GG_STR("dGVzdHN0cmluZw=="), GG_STR("teststring"));
+    BASE64_ENCODE_TEST(GG_STR("MTIzNDU2Nzg5MA=="), GG_STR("1234567890"));
+    BASE64_ENCODE_TEST(
+        GG_STR("VGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsYXp5IGRvZw=="),
+        GG_STR("The quick brown fox jumps over the lazy dog")
+    );
+    // spell:enable
+}
+
+GG_TEST_DEFINE(base64_encode_nomem) {
+    uint8_t small_mem[8];
+    GgArena small_arena = gg_arena_init(GG_BUF(small_mem));
+    GgBuffer unmodified = GG_STR("unmodified");
+    GG_TEST_ASSERT_BAD(
+        gg_base64_encode(GG_STR("too big"), &small_arena, &unmodified)
+    );
+
+    GG_TEST_ASSERT_BUF_EQUAL_STR(GG_STR("unmodified"), unmodified);
+}
+
+static inline void base64_decode_test(
+    GgBuffer encoded, GgBuffer decoded, unsigned line_number
+) {
+    static uint8_t target_mem[1024];
+    GgBuffer actual = GG_BUF(target_mem);
+
+    UnityAssertEqualNumber(
+        true,
+        gg_base64_decode(encoded, &actual),
+        "Failed to decode value",
+        line_number,
+        UNITY_DISPLAY_STYLE_INT
+    );
+
+    gg_test_assert_buf_equal_str(decoded, actual, NULL, line_number);
+}
+
+#define BASE64_DECODE_TEST(encoded, decoded) \
+    base64_decode_test(encoded, decoded, __LINE__)
+
+GG_TEST_DEFINE(base64_decode_okay) {
+    // spell:disable
+    BASE64_DECODE_TEST(GG_STR("emVybyBwYWRkaW5n"), GG_STR("zero padding"));
+    BASE64_DECODE_TEST(GG_STR("aGFzIHBhZGRpbmc="), GG_STR("has padding"));
+    BASE64_DECODE_TEST(GG_STR("dGVzdHN0cmluZw=="), GG_STR("teststring"));
+    BASE64_DECODE_TEST(GG_STR("MTIzNDU2Nzg5MA=="), GG_STR("1234567890"));
+    BASE64_DECODE_TEST(
+        GG_STR("VGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsYXp5IGRvZw=="),
+        GG_STR("The quick brown fox jumps over the lazy dog")
+    );
+    // spell:enable
+}
+
+GG_TEST_DEFINE(base64_decode_nomem) {
+    uint8_t small_mem[8];
+    GgBuffer small_buf = GG_BUF(small_mem);
+    // spell:disable-next-line
+    TEST_ASSERT_FALSE(gg_base64_decode(GG_STR("dGVzdHN0cmluZw=="), &small_buf));
+}
+
+GG_TEST_DEFINE(base64_decode_invalid) {
+    static uint8_t mem[1024];
+    {
+        GgBuffer output = GG_BUF(mem);
+        TEST_ASSERT_FALSE(gg_base64_decode(GG_STR("Not a base64"), &output));
+    }
+
+    {
+        GgBuffer output = GG_BUF(mem);
+        // input not a multiple of 4 bytes
+        // spell:disable-next-line
+        TEST_ASSERT_FALSE(gg_base64_decode(GG_STR("aGFzIHBhZGRpbmc"), &output));
+    }
+
+    {
+        GgBuffer output = GG_BUF(mem);
+        // input contains data after padding
+        TEST_ASSERT_FALSE(
+            // spell:disable-next-line
+            gg_base64_decode(GG_STR("aGFzIHBhZG=Rpbmc"), &output)
+        );
+    }
+}
+#endif
