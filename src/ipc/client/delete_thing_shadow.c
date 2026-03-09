@@ -1,3 +1,7 @@
+// aws-greengrass-component-sdk - Lightweight AWS IoT Greengrass SDK
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 #include <gg/buffer.h>
 #include <gg/error.h>
 #include <gg/ipc/client.h>
@@ -34,7 +38,27 @@ static GgError error_handler(void *ctx, GgBuffer error_code, GgBuffer message) {
     return GG_ERR_FAILURE;
 }
 
-GgError ggipc_delete_thing_shadow(GgBuffer thing_name, GgBuffer shadow_name) {
+static GgError response_handler(void *ctx, GgMap result) {
+    (void) ctx;
+
+    GgObject *payload_obj;
+    GgError ret = gg_map_validate(
+        result,
+        GG_MAP_SCHEMA(
+            { GG_STR("payload"), GG_OPTIONAL, GG_TYPE_BUF, &payload_obj }
+        )
+    );
+    if (ret != GG_ERR_OK) {
+        GG_LOGE("Failed validating DeleteThingShadow response.");
+        return GG_ERR_INVALID;
+    }
+
+    return GG_ERR_OK;
+}
+
+GgError ggipc_delete_thing_shadow(
+    GgBuffer thing_name, GgBuffer shadow_name, GgBuffer *payload
+) {
     GgMap args = GG_MAP(
         gg_kv(GG_STR("thingName"), gg_obj_buf(thing_name)),
         gg_kv(GG_STR("shadowName"), gg_obj_buf(shadow_name))
@@ -44,8 +68,8 @@ GgError ggipc_delete_thing_shadow(GgBuffer thing_name, GgBuffer shadow_name) {
         GG_STR("aws.greengrass#DeleteThingShadow"),
         GG_STR("aws.greengrass#DeleteThingShadowRequest"),
         args,
-        NULL,
+        &response_handler,
         &error_handler,
-        NULL
+        payload
     );
 }

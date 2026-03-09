@@ -10,12 +10,8 @@
         "aws.greengrass.ShadowManager": {
           "com.example.GetThingShadow:shadow:1": {
             "policyDescription": "Allows getting thing shadows.",
-            "operations": [
-              "aws.greengrass#GetThingShadow"
-            ],
-            "resources": [
-              "*"
-            ]
+            "operations": ["aws.greengrass#GetThingShadow"],
+            "resources": ["*"]
           }
         }
       }

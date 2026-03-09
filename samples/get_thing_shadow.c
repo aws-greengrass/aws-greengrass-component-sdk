@@ -26,9 +26,7 @@ int main(void) {
     GgBuffer payload = GG_BUF(shadow_buf);
 
     err = ggipc_get_thing_shadow(
-        GG_STR(THING_NAME),
-        GG_STR(SHADOW_NAME),
-        &payload
+        GG_STR(THING_NAME), GG_STR(SHADOW_NAME), &payload
     );
     if (err != GG_ERR_OK) {
         fprintf(
