@@ -184,25 +184,28 @@ GgError ggipc_update_thing_shadow(
 
 /// Delete the shadow for a thing.
 /// Deletes the shadow document for the specified thing and shadow name.
+/// Returns an empty response state document. `payload` is optional.
 /// Requires aws.greengrass#DeleteThingShadow authorization.
 /// See:
 /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-shadows.html#ipc-operation-deletethingshadow>
-GgError ggipc_delete_thing_shadow(GgBuffer thing_name, GgBuffer shadow_name);
+GgError ggipc_delete_thing_shadow(
+    GgBuffer thing_name, GgBuffer shadow_name, GgBuffer *payload
+);
+
+typedef void GgIpcListNamedShadowsCallback(void *ctx, GgBuffer shadow_name);
 
 /// List named shadows for a thing.
-/// Lists all named shadows for the specified thing.
-/// `page_token` can be empty for the first request.
-/// `results` will contain the list of shadow names.
-/// `next_token` will contain the pagination token if there are more results.
+/// Lists all named shadows for the specified thing, handling pagination
+/// internally. The callback is invoked once per shadow name.
 /// Requires aws.greengrass#ListNamedShadowsForThing authorization.
 /// See:
 /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-shadows.html#ipc-operation-listnamedshadowsforthing>
-ACCESS(read_write, 3) ACCESS(read_write, 4)
+NONNULL(3)
 GgError ggipc_list_named_shadows_for_thing(
     GgBuffer thing_name,
-    GgBuffer page_token,
-    GgList *results,
-    GgBuffer *next_token
+    uint32_t page_size,
+    GgIpcListNamedShadowsCallback *callback,
+    void *ctx
 );
 
 typedef void GgIpcSubscribeToConfigurationUpdateCallback(

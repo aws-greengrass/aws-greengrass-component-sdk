@@ -1,10 +1,18 @@
+// aws-greengrass-component-sdk - Lightweight AWS IoT Greengrass SDK
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 #include <gg/buffer.h>
 #include <gg/error.h>
 #include <gg/ipc/client.h>
 #include <gg/ipc/client_raw.h>
+#include <gg/list.h>
 #include <gg/log.h>
 #include <gg/map.h>
 #include <gg/object.h>
+#include <gg/vector.h>
+#include <string.h>
+#include <stdbool.h>
 #include <stddef.h>
 
 static GgError error_handler(void *ctx, GgBuffer error_code, GgBuffer message) {
@@ -35,8 +43,11 @@ static GgError error_handler(void *ctx, GgBuffer error_code, GgBuffer message) {
 }
 
 typedef struct {
-    GgList *results;
-    GgBuffer *next_token;
+    GgIpcListNamedShadowsCallback *callback;
+    void *ctx;
+    uint8_t next_token_buf[256];
+    GgBuffer next_token;
+    bool has_next;
 } ListShadowsCtx;
 
 static GgError response_handler(void *ctx, GgMap result) {
@@ -48,7 +59,8 @@ static GgError response_handler(void *ctx, GgMap result) {
         result,
         GG_MAP_SCHEMA(
             { GG_STR("results"), GG_REQUIRED, GG_TYPE_LIST, &results_obj },
-            { GG_STR("nextToken"), GG_OPTIONAL, GG_TYPE_BUF, &next_token_obj }
+            { GG_STR("nextToken"), GG_OPTIONAL, GG_TYPE_BUF, &next_token_obj },
+            { GG_STR("timestamp"), GG_OPTIONAL, GG_TYPE_F64, NULL }
         )
     );
     if (ret != GG_ERR_OK) {
@@ -56,10 +68,36 @@ static GgError response_handler(void *ctx, GgMap result) {
         return GG_ERR_INVALID;
     }
 
-    *list_ctx->results = gg_obj_into_list(*results_obj);
+    // Call callback for each shadow name
+    GgList list = gg_obj_into_list(*results_obj);
+    GG_LIST_FOREACH (item, list) {
+        if (gg_obj_type(*item) == GG_TYPE_BUF) {
+            list_ctx->callback(list_ctx->ctx, gg_obj_into_buf(*item));
+        }
+    }
 
-    if (next_token_obj != NULL && list_ctx->next_token != NULL) {
-        *list_ctx->next_token = gg_obj_into_buf(*next_token_obj);
+    // Handle nextToken for pagination
+    if (next_token_obj != NULL) {
+        GgBuffer token = gg_obj_into_buf(*next_token_obj);
+        if (token.len > 0) {
+            if (token.len > sizeof(list_ctx->next_token_buf)) {
+                GG_LOGW(
+                    "NextToken length %zu exceeds buffer, stopping pagination.",
+                    (size_t) token.len
+                );
+                list_ctx->has_next = false;
+            } else {
+                memcpy(list_ctx->next_token_buf, token.data, token.len);
+                list_ctx->next_token
+                    = (GgBuffer) { .data = list_ctx->next_token_buf,
+                                   .len = token.len };
+                list_ctx->has_next = true;
+            }
+        } else {
+            list_ctx->has_next = false;
+        }
+    } else {
+        list_ctx->has_next = false;
     }
 
     return GG_ERR_OK;
@@ -67,28 +105,56 @@ static GgError response_handler(void *ctx, GgMap result) {
 
 GgError ggipc_list_named_shadows_for_thing(
     GgBuffer thing_name,
-    GgBuffer page_token,
-    GgList *results,
-    GgBuffer *next_token
+    uint32_t page_size,
+    GgIpcListNamedShadowsCallback *callback,
+    void *ctx
 ) {
-    GgMap args;
-    if (page_token.len > 0) {
-        args = GG_MAP(
-            gg_kv(GG_STR("thingName"), gg_obj_buf(thing_name)),
-            gg_kv(GG_STR("nextToken"), gg_obj_buf(page_token))
+    ListShadowsCtx list_ctx = {
+        .callback = callback,
+        .ctx = ctx,
+        .next_token = { 0 },
+        .has_next = false,
+    };
+
+    do {
+        list_ctx.has_next = false;
+
+        GgKVVec args = GG_KV_VEC((GgKV[3]) { 0 });
+
+        // Required argument: thingName
+        (void) gg_kv_vec_push(
+            &args, gg_kv(GG_STR("thingName"), gg_obj_buf(thing_name))
         );
-    } else {
-        args = GG_MAP(gg_kv(GG_STR("thingName"), gg_obj_buf(thing_name)));
-    }
 
-    ListShadowsCtx list_ctx = { .results = results, .next_token = next_token };
+        // Optional: nextToken for pagination
+        if (list_ctx.next_token.len > 0) {
+            (void) gg_kv_vec_push(
+                &args,
+                gg_kv(GG_STR("nextToken"), gg_obj_buf(list_ctx.next_token))
+            );
+        }
 
-    return ggipc_call(
-        GG_STR("aws.greengrass#ListNamedShadowsForThing"),
-        GG_STR("aws.greengrass#ListNamedShadowsForThingRequest"),
-        args,
-        &response_handler,
-        &error_handler,
-        &list_ctx
-    );
+        // Optional: pageSize
+        if (page_size > 0) {
+            (void) gg_kv_vec_push(
+                &args,
+                gg_kv(GG_STR("pageSize"), gg_obj_i64((int64_t) page_size))
+            );
+        }
+
+        GgError ret = ggipc_call(
+            GG_STR("aws.greengrass#ListNamedShadowsForThing"),
+            GG_STR("aws.greengrass#ListNamedShadowsForThingRequest"),
+            args.map,
+            &response_handler,
+            &error_handler,
+            &list_ctx
+        );
+
+        if (ret != GG_ERR_OK) {
+            return ret;
+        }
+    } while (list_ctx.has_next);
+
+    return GG_ERR_OK;
 }
