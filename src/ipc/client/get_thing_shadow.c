@@ -1,3 +1,7 @@
+// aws-greengrass-component-sdk - Lightweight AWS IoT Greengrass SDK
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 #include <gg/base64.h>
 #include <gg/buffer.h>
 #include <gg/error.h>
@@ -53,7 +57,7 @@ static GgError response_handler(void *ctx, GgMap result) {
     GgBuffer b64_payload = gg_obj_into_buf(*payload_obj);
     if (!gg_base64_decode(b64_payload, payload)) {
         GG_LOGE("Failed to decode shadow payload.");
-        return GG_ERR_INVALID;
+        return GG_ERR_PARSE;
     }
 
     return GG_ERR_OK;
@@ -67,7 +71,6 @@ GgError ggipc_get_thing_shadow(
         gg_kv(GG_STR("shadowName"), gg_obj_buf(shadow_name))
     );
 
-    GG_LOGE("Going to send the IPC request");
     return ggipc_call(
         GG_STR("aws.greengrass#GetThingShadow"),
         GG_STR("aws.greengrass#GetThingShadowRequest"),

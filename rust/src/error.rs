@@ -42,9 +42,9 @@ pub enum Error {
     Expected = GG_ERR_EXPECTED as u32,
     /// Request timed out
     Timeout = GG_ERR_TIMEOUT as u32,
-    /// Request unauthorized
+    /// Lack of permission or authorization policy
     Unauthorized = GG_ERR_UNAUTHORIZED as u32,
-    /// Request conflicts with current version
+    /// Version mismatch
     Conflict = GG_ERR_CONFLICT as u32,
 }
 

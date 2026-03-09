@@ -10,8 +10,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define THING_NAME "lite-shadow-thing"
-#define SHADOW_NAME "bike_status"
+#define THING_NAME "<define_your_own_thingName>"
+#define SHADOW_NAME "<define_your_own_shadowName>"
 
 int main(void) {
     gg_sdk_init();
@@ -26,8 +26,8 @@ int main(void) {
     GgBuffer payload = GG_BUF(shadow_buf);
 
     err = ggipc_get_thing_shadow(
-        gg_buffer_from_null_term((char *) THING_NAME),
-        gg_buffer_from_null_term((char *) SHADOW_NAME),
+        GG_STR(THING_NAME),
+        GG_STR(SHADOW_NAME),
         &payload
     );
     if (err != GG_ERR_OK) {

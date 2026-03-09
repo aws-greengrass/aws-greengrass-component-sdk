@@ -1,9 +1,26 @@
 {
   "RecipeFormatVersion": "2020-01-25",
-  "ComponentName": "com.example.GetThingShadowC",
+  "ComponentName": "com.example.GetThingShadow",
   "ComponentVersion": "1.0.0",
   "ComponentDescription": "A component that gets a thing shadow.",
   "ComponentPublisher": "Amazon",
+  "ComponentConfiguration": {
+    "DefaultConfiguration": {
+      "accessControl": {
+        "aws.greengrass.ShadowManager": {
+          "com.example.GetThingShadow:shadow:1": {
+            "policyDescription": "Allows getting thing shadows.",
+            "operations": [
+              "aws.greengrass#GetThingShadow"
+            ],
+            "resources": [
+              "*"
+            ]
+          }
+        }
+      }
+    }
+  },
   "Manifests": [
     {
       "Platform": {
