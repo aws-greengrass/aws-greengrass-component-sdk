@@ -10,8 +10,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define THING_NAME "lite-shadow-thing"
-#define SHADOW_NAME "bike_status"
+#define THING_NAME "<define_your_own_thingName>"
+#define SHADOW_NAME "<define_your_own_shadowName>"
+
+static const char shadow_document[] = "<define_your_own_payload>";
 
 int main(void) {
     gg_sdk_init();
@@ -22,17 +24,14 @@ int main(void) {
         exit(-1);
     }
 
-    const char *update_doc = "{\"state\":{\"desired\":{\"speed\":25}}}";
-    GgBuffer payload = gg_buffer_from_null_term((char *) update_doc);
+    GgBuffer payload = { .data = (uint8_t *) shadow_document,
+                         .len = sizeof(shadow_document) - 1 };
 
     uint8_t response_buf[8192];
     GgBuffer response = GG_BUF(response_buf);
 
     err = ggipc_update_thing_shadow(
-        gg_buffer_from_null_term((char *) THING_NAME),
-        gg_buffer_from_null_term((char *) SHADOW_NAME),
-        payload,
-        &response
+        GG_STR(THING_NAME), GG_STR(SHADOW_NAME), payload, &response
     );
     if (err != GG_ERR_OK) {
         fprintf(
@@ -45,8 +44,6 @@ int main(void) {
     }
 
     printf(
-        "Shadow updated successfully:\n%.*s\n",
-        (int) response.len,
-        response.data
+        "Shadow updated successfully:%.*s\n", (int) response.len, response.data
     );
 }
