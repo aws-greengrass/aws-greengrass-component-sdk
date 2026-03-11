@@ -213,7 +213,7 @@ GgReader gg_json_reader(const GgObject *obj) {
     return (GgReader) { .read = obj_read, .ctx = (void *) obj };
 }
 
-#ifdef GG_TESTING
+#ifdef GG_SDK_TESTING
 
 #include <gg/map.h>
 #include <gg/test.h>
@@ -345,7 +345,7 @@ GG_TEST_DEFINE(json_encode_map_too_nested) {
 }
 
 GG_TEST_DEFINE(json_encode_map_too_large) {
-    GgKV too_large[GG_MAX_OBJECT_SUBOBJECTS / 2 + 1];
+    GgKV too_large[(GG_MAX_OBJECT_SUBOBJECTS / 2) + 1];
     // {"a"=0,"a"=1,...}
     size_t too_large_len = sizeof(too_large) / sizeof(too_large[0]);
     for (size_t i = 0; i != too_large_len; i++) {
@@ -353,7 +353,7 @@ GG_TEST_DEFINE(json_encode_map_too_large) {
     }
 
     GgBuffer buf
-        = GG_BUF((uint8_t[16 *(GG_MAX_OBJECT_SUBOBJECTS / 2 + 1)]) { 0 });
+        = GG_BUF((uint8_t[16 *((GG_MAX_OBJECT_SUBOBJECTS / 2) + 1)]) { 0 });
     GgByteVec vec = gg_byte_vec_init(buf);
     GgError ret = gg_json_encode(
         gg_obj_map((GgMap) { .pairs = too_large, .len = too_large_len }),
