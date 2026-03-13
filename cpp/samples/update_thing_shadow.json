@@ -1,0 +1,38 @@
+{
+  "RecipeFormatVersion": "2020-01-25",
+  "ComponentName": "com.example.UpdateThingShadowCpp",
+  "ComponentVersion": "1.0.0",
+  "ComponentDescription": "A component that updates a thing shadow.",
+  "ComponentPublisher": "Amazon",
+  "ComponentConfiguration": {
+    "DefaultConfiguration": {
+      "accessControl": {
+        "aws.greengrass.ShadowManager": {
+          "com.example.UpdateThingShadowCpp:shadow:1": {
+            "policyDescription": "Allows updating thing shadows.",
+            "operations": ["aws.greengrass#UpdateThingShadow"],
+            "resources": ["*"]
+          }
+        }
+      }
+    }
+  },
+  "Manifests": [
+    {
+      "Platform": {
+        "os": "linux"
+      },
+      "Lifecycle": {
+        "run": "{artifacts:path}/sample_cpp_update_thing_shadow"
+      },
+      "Artifacts": [
+        {
+          "URI": "s3://amzn-s3-demo-bucket/artifacts/com.example.UpdateThingShadowCpp/1.0.0/sample_cpp_update_thing_shadow",
+          "Permission": {
+            "Execute": "OWNER"
+          }
+        }
+      ]
+    }
+  ]
+}
