@@ -3,7 +3,6 @@
 
 // Example: Get a thing shadow
 
-#include <gg/buffer.h>
 #include <gg/error.h>
 #include <gg/ipc/client.h>
 #include <gg/sdk.h>
@@ -21,23 +20,16 @@ int main(void) {
 
     GgBuffer thing_name
         = gg_buffer_from_null_term(getenv("AWS_IOT_THING_NAME"));
-    GgBuffer shadow_name = GG_STR("<define_your_own_shadowName>");
+    GgBuffer shadow_name = GG_STR("my-shadow");
 
     uint8_t shadow_buf[8192];
     GgBuffer payload = GG_BUF(shadow_buf);
 
     err = ggipc_get_thing_shadow(thing_name, &shadow_name, &payload);
     if (err != GG_ERR_OK) {
-        fprintf(
-            stderr,
-            "Failed to get thing shadow %.*s from the thing %.*s.\n",
-            (int) shadow_name.len,
-            shadow_name.data,
-            (int) thing_name.len,
-            thing_name.data
-        );
+        fprintf(stderr, "Failed to get local shadow.\n");
         exit(-1);
     }
 
-    printf("Shadow document:\n%.*s\n", (int) payload.len, payload.data);
+    printf("Shadow document: %.*s\n", (int) payload.len, payload.data);
 }

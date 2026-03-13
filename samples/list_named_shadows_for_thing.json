@@ -1,6 +1,6 @@
 {
   "RecipeFormatVersion": "2020-01-25",
-  "ComponentName": "com.example.ListNamedShadowsForThing",
+  "ComponentName": "com.example.ListNamedShadowsForThingC",
   "ComponentVersion": "1.0.0",
   "ComponentDescription": "A component that lists named shadows for a thing.",
   "ComponentPublisher": "Amazon",
@@ -8,7 +8,7 @@
     "DefaultConfiguration": {
       "accessControl": {
         "aws.greengrass.ShadowManager": {
-          "com.example.ListNamedShadowsForThing:shadow:1": {
+          "com.example.ListNamedShadowsForThingC:shadow:1": {
             "policyDescription": "Allows listing named shadows for a thing.",
             "operations": ["aws.greengrass#ListNamedShadowsForThing"],
             "resources": ["*"]
@@ -27,7 +27,7 @@
       },
       "Artifacts": [
         {
-          "URI": "s3://amzn-s3-demo-bucket/artifacts/com.example.ListNamedShadowsForThing/1.0.0/sample_list_named_shadows_for_thing",
+          "URI": "s3://amzn-s3-demo-bucket/artifacts/com.example.ListNamedShadowsForThingC/1.0.0/sample_list_named_shadows_for_thing",
           "Permission": {
             "Execute": "OWNER"
           }

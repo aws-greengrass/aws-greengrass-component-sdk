@@ -3,7 +3,6 @@
 
 // Example: Delete a thing shadow
 
-#include <gg/buffer.h>
 #include <gg/error.h>
 #include <gg/ipc/client.h>
 #include <gg/sdk.h>
@@ -21,24 +20,13 @@ int main(void) {
 
     GgBuffer thing_name
         = gg_buffer_from_null_term(getenv("AWS_IOT_THING_NAME"));
-    GgBuffer shadow_name = GG_STR("<define_your_own_shadowName>");
+    GgBuffer shadow_name = GG_STR("my-shadow");
 
     err = ggipc_delete_thing_shadow(thing_name, &shadow_name);
     if (err != GG_ERR_OK) {
-        fprintf(
-            stderr,
-            "Failed to delete thing shadow %.*s for thing %.*s.\n",
-            (int) shadow_name.len,
-            shadow_name.data,
-            (int) thing_name.len,
-            thing_name.data
-        );
+        fprintf(stderr, "Failed to delete shadow.\n");
         exit(-1);
     }
 
-    printf(
-        "Shadow %.*s deleted successfully.\n",
-        (int) shadow_name.len,
-        shadow_name.data
-    );
+    printf("Shadow deleted successfully.\n");
 }

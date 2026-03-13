@@ -3,7 +3,6 @@
 
 // Example: Update a thing shadow
 
-#include <gg/buffer.h>
 #include <gg/error.h>
 #include <gg/ipc/client.h>
 #include <gg/sdk.h>
@@ -21,19 +20,13 @@ int main(void) {
 
     GgBuffer thing_name
         = gg_buffer_from_null_term(getenv("AWS_IOT_THING_NAME"));
-    GgBuffer shadow_name = GG_STR("<define_your_own_shadowName>");
-    GgBuffer payload = GG_STR("<define_your_own_payload>");
+    GgBuffer shadow_name = GG_STR("my-shadow");
+    GgBuffer payload
+        = GG_STR("{\"state\":{\"reported\":{\"temperature\":25}}}");
 
     err = ggipc_update_thing_shadow(thing_name, &shadow_name, payload, NULL);
     if (err != GG_ERR_OK) {
-        fprintf(
-            stderr,
-            "Failed to update thing shadow %.*s for thing %.*s.\n",
-            (int) shadow_name.len,
-            shadow_name.data,
-            (int) thing_name.len,
-            thing_name.data
-        );
+        fprintf(stderr, "Failed to update shadow.\n");
         exit(-1);
     }
 
