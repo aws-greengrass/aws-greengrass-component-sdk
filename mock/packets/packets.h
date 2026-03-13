@@ -164,4 +164,41 @@ GgipcPacket gg_test_restart_component_request_packet(
 GgipcPacket gg_test_restart_component_response_packet(
     int32_t stream_id, GgBuffer restart_status
 );
+
+// Shadow operations
+
+GgipcPacket gg_test_shadow_update_request_packet(
+    int32_t stream_id,
+    GgBuffer thing_name,
+    GgBuffer shadow_name,
+    GgBuffer payload_base64
+);
+
+GgipcPacket gg_test_shadow_update_response_packet(
+    int32_t stream_id, GgBuffer payload_base64
+);
+
+GgipcPacket gg_test_shadow_get_request_packet(
+    int32_t stream_id, GgBuffer thing_name, GgBuffer shadow_name
+);
+
+GgipcPacket gg_test_shadow_get_response_packet(
+    int32_t stream_id, GgBuffer payload_base64
+);
+
+GgipcPacket gg_test_shadow_delete_request_packet(
+    int32_t stream_id, GgBuffer thing_name, GgBuffer shadow_name
+);
+
+GgipcPacket gg_test_shadow_delete_response_packet(
+    int32_t stream_id, GgBuffer payload_base64
+);
+
+GgipcPacket gg_test_shadow_list_request_packet(
+    int32_t stream_id, GgBuffer thing_name, GgBuffer *next_token
+);
+
+GgipcPacket gg_test_shadow_list_response_packet(
+    int32_t stream_id, GgList results, double timestamp, GgBuffer *next_token
+);
 #endif

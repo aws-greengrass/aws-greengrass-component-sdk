@@ -84,4 +84,56 @@ GgipcPacketSequence gg_test_restart_component_error_sequence(
     int32_t stream_id, GgBuffer component_name
 );
 
+// Shadow sequences
+
+GgipcPacketSequence gg_test_shadow_update_accepted_sequence(
+    int32_t stream_id,
+    GgBuffer thing_name,
+    GgBuffer shadow_name,
+    GgBuffer request_payload,
+    GgBuffer response_payload
+);
+
+GgipcPacketSequence gg_test_shadow_update_error_sequence(
+    int32_t stream_id,
+    GgBuffer thing_name,
+    GgBuffer shadow_name,
+    GgBuffer payload_base64
+);
+
+GgipcPacketSequence gg_test_shadow_get_accepted_sequence(
+    int32_t stream_id,
+    GgBuffer thing_name,
+    GgBuffer shadow_name,
+    GgBuffer response_payload
+);
+
+GgipcPacketSequence gg_test_shadow_get_error_sequence(
+    int32_t stream_id, GgBuffer thing_name, GgBuffer shadow_name
+);
+
+GgipcPacketSequence gg_test_shadow_delete_accepted_sequence(
+    int32_t stream_id,
+    GgBuffer thing_name,
+    GgBuffer shadow_name,
+    GgBuffer response_payload
+);
+
+GgipcPacketSequence gg_test_shadow_delete_error_sequence(
+    int32_t stream_id, GgBuffer thing_name, GgBuffer shadow_name
+);
+
+GgipcPacketSequence gg_test_shadow_list_accepted_sequence(
+    int32_t stream_id,
+    GgBuffer thing_name,
+    GgBuffer *request_next_token,
+    GgList results,
+    double timestamp,
+    GgBuffer *response_next_token
+);
+
+GgipcPacketSequence gg_test_shadow_list_error_sequence(
+    int32_t stream_id, GgBuffer thing_name
+);
+
 #endif
