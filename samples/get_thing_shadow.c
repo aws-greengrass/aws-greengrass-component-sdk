@@ -19,7 +19,8 @@ int main(void) {
         exit(-1);
     }
 
-    GgBuffer thing_name = GG_STR("<define_your_own_thingName>");
+    GgBuffer thing_name
+        = gg_buffer_from_null_term(getenv("AWS_IOT_THING_NAME"));
     GgBuffer shadow_name = GG_STR("<define_your_own_shadowName>");
 
     uint8_t shadow_buf[8192];
