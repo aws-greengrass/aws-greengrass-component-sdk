@@ -502,6 +502,147 @@ impl Sdk {
         Result::from(unsafe { c::ggipc_restart_component(component_name.into()) })
     }
 
+    /// Get the shadow for a thing.
+    ///
+    /// Retrieves the shadow document for the specified thing and shadow name.
+    /// Pass `None` for `shadow_name` to use the classic shadow.
+    /// `result_mem` must be large enough to hold the decoded shadow document.
+    /// Requires `aws.greengrass#GetThingShadow` authorization.
+    ///
+    /// See: <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-shadows.html#ipc-operation-getthingshadow>
+    ///
+    /// # Errors
+    /// Returns error if the shadow retrieval fails.
+    pub fn get_thing_shadow<'a>(
+        &self,
+        thing_name: &str,
+        shadow_name: Option<&str>,
+        result_mem: &'a mut [MaybeUninit<u8>],
+    ) -> Result<&'a [u8]> {
+        let shadow_buf = shadow_name.map(c::GgBuffer::from);
+
+        let mut payload = c::GgBuffer {
+            data: result_mem.as_mut_ptr().cast::<u8>(),
+            len: result_mem.len(),
+        };
+
+        Result::from(unsafe {
+            c::ggipc_get_thing_shadow(
+                thing_name.into(),
+                shadow_buf.as_ref().map_or(ptr::null(), ptr::from_ref),
+                &raw mut payload,
+            )
+        })?;
+
+        Ok(unsafe { slice::from_raw_parts(payload.data, payload.len) })
+    }
+
+    /// Update the shadow for a thing.
+    ///
+    /// Updates the shadow document for the specified thing and shadow name.
+    /// Pass `None` for `shadow_name` to use the classic shadow.
+    /// Pass `Some` buffer for `response_mem` to receive the response payload,
+    /// or `None` to ignore it.
+    /// Requires `aws.greengrass#UpdateThingShadow` authorization.
+    ///
+    /// See: <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-shadows.html#ipc-operation-updatethingshadow>
+    ///
+    /// # Errors
+    /// Returns error if the shadow update fails.
+    #[expect(clippy::needless_pass_by_value)]
+    pub fn update_thing_shadow<'a>(
+        &self,
+        thing_name: &str,
+        shadow_name: Option<&str>,
+        payload: &[u8],
+        response_mem: Option<&'a mut [MaybeUninit<u8>]>,
+    ) -> Result<Option<&'a [u8]>> {
+        let shadow_buf = shadow_name.map(c::GgBuffer::from);
+
+        let mut response = response_mem.as_ref().map(|mem| c::GgBuffer {
+            data: mem.as_ptr() as *mut u8,
+            len: mem.len(),
+        });
+
+        Result::from(unsafe {
+            c::ggipc_update_thing_shadow(
+                thing_name.into(),
+                shadow_buf.as_ref().map_or(ptr::null(), ptr::from_ref),
+                payload.into(),
+                response
+                    .as_mut()
+                    .map_or(ptr::null_mut(), ptr::from_mut),
+            )
+        })?;
+
+        Ok(response
+            .map(|r| unsafe { slice::from_raw_parts(r.data, r.len) }))
+    }
+
+    /// Delete the shadow for a thing.
+    ///
+    /// Pass `None` for `shadow_name` to use the classic shadow.
+    /// Requires `aws.greengrass#DeleteThingShadow` authorization.
+    ///
+    /// See: <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-shadows.html#ipc-operation-deletethingshadow>
+    ///
+    /// # Errors
+    /// Returns error if the shadow deletion fails.
+    pub fn delete_thing_shadow(
+        &self,
+        thing_name: &str,
+        shadow_name: Option<&str>,
+    ) -> Result<()> {
+        let shadow_buf = shadow_name.map(c::GgBuffer::from);
+
+        Result::from(unsafe {
+            c::ggipc_delete_thing_shadow(
+                thing_name.into(),
+                shadow_buf.as_ref().map_or(ptr::null(), ptr::from_ref),
+            )
+        })
+    }
+
+    /// List named shadows for a thing.
+    ///
+    /// Lists all named shadows for the specified thing, handling pagination
+    /// internally. The callback is invoked once per shadow name.
+    /// Requires `aws.greengrass#ListNamedShadowsForThing` authorization.
+    ///
+    /// See: <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-shadows.html#ipc-operation-listnamedshadowsforthing>
+    ///
+    /// # Errors
+    /// Returns error if listing fails.
+    pub fn list_named_shadows_for_thing<F: FnMut(&str)>(
+        &self,
+        thing_name: &str,
+        callback: &mut F,
+    ) -> Result<()> {
+        extern "C" fn trampoline<F: FnMut(&str)>(
+            ctx: *mut ffi::c_void,
+            shadow_name: c::GgBuffer,
+        ) {
+            let cb = unsafe { &mut *ctx.cast::<F>() };
+            let name = unsafe {
+                str::from_utf8_unchecked(slice::from_raw_parts(
+                    shadow_name.data,
+                    shadow_name.len,
+                ))
+            };
+            cb(name);
+        }
+
+        let ctx = callback as *mut F;
+
+        Result::from(unsafe {
+            c::ggipc_list_named_shadows_for_thing(
+                thing_name.into(),
+                Some(trampoline::<F>),
+                ctx.cast::<ffi::c_void>(),
+            )
+        })
+    }
+
     /// Subscribe to component configuration updates.
     ///
     /// Receives notifications when configuration changes for the specified key path.
