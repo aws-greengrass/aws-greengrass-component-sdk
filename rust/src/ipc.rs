@@ -1139,6 +1139,327 @@ mod test {
     // enum prevents invalid values at compile time.
 
     #[test]
+    fn test_get_thing_shadow_okay() -> Result<()> {
+        let thing_name = "MyThing";
+        let shadow_name = "myShadow";
+        let payload = "hello";
+        let payload_b64 = "aGVsbG8=";
+        let seq = unsafe {
+            c::gg_test_shadow_get_accepted_sequence(
+                1,
+                thing_name.into(),
+                shadow_name.into(),
+                payload_b64.into(),
+            )
+        };
+        run_ipc_sequence_test(seq, || {
+            let sdk = Sdk::init();
+            sdk.connect()?;
+            let mut buf = [std::mem::MaybeUninit::uninit(); 64];
+            let result =
+                sdk.get_thing_shadow(thing_name, Some(shadow_name), &mut buf)?;
+            assert_eq!(result, payload.as_bytes());
+            Ok(())
+        })
+    }
+
+    #[test]
+    fn test_get_thing_shadow_rejected() -> Result<()> {
+        let thing_name = "MyThing";
+        let shadow_name = "myShadow";
+        let seq = unsafe {
+            c::gg_test_shadow_get_error_sequence(
+                1,
+                thing_name.into(),
+                shadow_name.into(),
+            )
+        };
+        run_ipc_sequence_test(seq, || {
+            let sdk = Sdk::init();
+            sdk.connect()?;
+            let mut buf = [std::mem::MaybeUninit::uninit(); 64];
+            assert!(sdk
+                .get_thing_shadow(thing_name, Some(shadow_name), &mut buf)
+                .is_err());
+            Ok(())
+        })
+    }
+
+    #[test]
+    fn test_update_thing_shadow_okay() -> Result<()> {
+        let thing_name = "MyThing";
+        let shadow_name = "myShadow";
+        let payload = b"hello";
+        let payload_b64 = "aGVsbG8=";
+        let seq = unsafe {
+            c::gg_test_shadow_update_accepted_sequence(
+                1,
+                thing_name.into(),
+                shadow_name.into(),
+                payload_b64.into(),
+                payload_b64.into(),
+            )
+        };
+        run_ipc_sequence_test(seq, || {
+            let sdk = Sdk::init();
+            sdk.connect()?;
+            sdk.update_thing_shadow(thing_name, Some(shadow_name), payload, None)?;
+            Ok(())
+        })
+    }
+
+    #[test]
+    fn test_update_thing_shadow_rejected() -> Result<()> {
+        let thing_name = "MyThing";
+        let shadow_name = "myShadow";
+        let payload = b"hello";
+        let payload_b64 = "aGVsbG8=";
+        let seq = unsafe {
+            c::gg_test_shadow_update_error_sequence(
+                1,
+                thing_name.into(),
+                shadow_name.into(),
+                payload_b64.into(),
+            )
+        };
+        run_ipc_sequence_test(seq, || {
+            let sdk = Sdk::init();
+            sdk.connect()?;
+            assert!(sdk
+                .update_thing_shadow(thing_name, Some(shadow_name), payload, None)
+                .is_err());
+            Ok(())
+        })
+    }
+
+    #[test]
+    fn test_delete_thing_shadow_okay() -> Result<()> {
+        let thing_name = "MyThing";
+        let shadow_name = "myShadow";
+        let seq = unsafe {
+            c::gg_test_shadow_delete_accepted_sequence(
+                1,
+                thing_name.into(),
+                shadow_name.into(),
+                "".into(),
+            )
+        };
+        run_ipc_sequence_test(seq, || {
+            let sdk = Sdk::init();
+            sdk.connect()?;
+            sdk.delete_thing_shadow(thing_name, Some(shadow_name))?;
+            Ok(())
+        })
+    }
+
+    #[test]
+    fn test_delete_thing_shadow_rejected() -> Result<()> {
+        let thing_name = "MyThing";
+        let shadow_name = "myShadow";
+        let seq = unsafe {
+            c::gg_test_shadow_delete_error_sequence(
+                1,
+                thing_name.into(),
+                shadow_name.into(),
+            )
+        };
+        run_ipc_sequence_test(seq, || {
+            let sdk = Sdk::init();
+            sdk.connect()?;
+            assert!(sdk
+                .delete_thing_shadow(thing_name, Some(shadow_name))
+                .is_err());
+            Ok(())
+        })
+    }
+
+    #[test]
+    fn test_list_named_shadows_okay() -> Result<()> {
+        let thing_name = "MyThing";
+        let shadow_name = "myShadow";
+        let timestamp: f64 = 1773436831.0;
+
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        unsafe {
+            Result::from(c::gg_test_setup_ipc(
+                c"/tmp/gg-test".as_ptr(),
+                0o666,
+                c"1234567890ABCDEF".as_ptr(),
+            ))?;
+
+            let pid = libc::fork();
+            assert!(pid >= 0, "fork failed");
+
+            if pid == 0 {
+                let sdk = Sdk::init();
+                sdk.connect().unwrap();
+                let mut count = 0usize;
+                sdk.list_named_shadows_for_thing(
+                    thing_name,
+                    &mut |name: &str| {
+                        assert_eq!(name, "myShadow");
+                        count += 1;
+                    },
+                )
+                .unwrap();
+                assert_eq!(count, 1);
+                libc::exit(0);
+            }
+
+            let mut result_item = c::gg_obj_buf(shadow_name.into());
+            let results = c::GgList {
+                items: &mut result_item,
+                len: 1,
+            };
+
+            Result::from(c::gg_test_accept_client_handshake(5))?;
+
+            Result::from(c::gg_test_expect_packet_sequence(
+                c::gg_test_shadow_list_accepted_sequence(
+                    1,
+                    thing_name.into(),
+                    core::ptr::null_mut(),
+                    results,
+                    timestamp,
+                    core::ptr::null_mut(),
+                ),
+                5,
+            ))?;
+
+            Result::from(c::gg_test_wait_for_client_disconnect(30))?;
+
+            c::gg_test_close();
+
+            let mut status = 0;
+            libc::waitpid(pid, &mut status, 0);
+            assert!(libc::WIFEXITED(status));
+            assert_eq!(libc::WEXITSTATUS(status), 0);
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_list_named_shadows_rejected() -> Result<()> {
+        let thing_name = "MyThing";
+        let seq = unsafe {
+            c::gg_test_shadow_list_error_sequence(1, thing_name.into())
+        };
+        run_ipc_sequence_test(seq, || {
+            let sdk = Sdk::init();
+            sdk.connect()?;
+            assert!(sdk
+                .list_named_shadows_for_thing(thing_name, &mut |_: &str| {})
+                .is_err());
+            Ok(())
+        })
+    }
+
+    #[test]
+    fn test_list_named_shadows_paginated_okay() -> Result<()> {
+        let thing_name = "MyThing";
+        let timestamp: f64 = 1773436831.0;
+
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        unsafe {
+            Result::from(c::gg_test_setup_ipc(
+                c"/tmp/gg-test".as_ptr(),
+                0o666,
+                c"1234567890ABCDEF".as_ptr(),
+            ))?;
+
+            let pid = libc::fork();
+            assert!(pid >= 0, "fork failed");
+
+            if pid == 0 {
+                let sdk = Sdk::init();
+                sdk.connect().unwrap();
+                let mut count = 0usize;
+                let expected = ["shadow1", "shadow2"];
+                sdk.list_named_shadows_for_thing(
+                    thing_name,
+                    &mut |name: &str| {
+                        assert_eq!(name, expected[count]);
+                        count += 1;
+                    },
+                )
+                .unwrap();
+                assert_eq!(count, 2);
+                libc::exit(0);
+            }
+
+            let mut next_token1: c::GgBuffer = "token123".into();
+            let mut next_token2: c::GgBuffer = "token456".into();
+
+            let mut page1_item = c::gg_obj_buf("shadow1".into());
+            let page1 = c::GgList {
+                items: &mut page1_item,
+                len: 1,
+            };
+
+            let mut page2_item = c::gg_obj_buf("shadow2".into());
+            let page2 = c::GgList {
+                items: &mut page2_item,
+                len: 1,
+            };
+
+            let empty = c::GgList {
+                items: core::ptr::null_mut(),
+                len: 0,
+            };
+
+            Result::from(c::gg_test_accept_client_handshake(5))?;
+
+            Result::from(c::gg_test_expect_packet_sequence(
+                c::gg_test_shadow_list_accepted_sequence(
+                    1,
+                    thing_name.into(),
+                    core::ptr::null_mut(),
+                    page1,
+                    timestamp,
+                    &mut next_token1,
+                ),
+                5,
+            ))?;
+
+            Result::from(c::gg_test_expect_packet_sequence(
+                c::gg_test_shadow_list_accepted_sequence(
+                    2,
+                    thing_name.into(),
+                    &mut next_token1,
+                    page2,
+                    timestamp,
+                    &mut next_token2,
+                ),
+                5,
+            ))?;
+
+            Result::from(c::gg_test_expect_packet_sequence(
+                c::gg_test_shadow_list_accepted_sequence(
+                    3,
+                    thing_name.into(),
+                    &mut next_token2,
+                    empty,
+                    timestamp,
+                    core::ptr::null_mut(),
+                ),
+                5,
+            ))?;
+
+            Result::from(c::gg_test_wait_for_client_disconnect(30))?;
+
+            c::gg_test_close();
+
+            let mut status = 0;
+            libc::waitpid(pid, &mut status, 0);
+            assert!(libc::WIFEXITED(status));
+            assert_eq!(libc::WEXITSTATUS(status), 0);
+        }
+
+        Ok(())
+    }
+
+    #[test]
     fn test_subscribe_to_iot_core_okay() -> Result<()> {
         let topic = "my/topic";
         let payload_base64 = "SGVsbG8gd29ybGQh";
