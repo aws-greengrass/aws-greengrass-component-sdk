@@ -1,0 +1,19 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+// Example: Delete a thing shadow
+
+use gg_sdk::Sdk;
+
+fn main() {
+    let sdk = Sdk::init();
+    sdk.connect().expect("Failed to establish IPC connection");
+
+    let thing_name = std::env::var("AWS_IOT_THING_NAME").unwrap();
+    let shadow_name = "my-shadow";
+
+    sdk.delete_thing_shadow(&thing_name, Some(shadow_name))
+        .expect("Failed to delete shadow");
+
+    println!("Shadow deleted successfully.");
+}

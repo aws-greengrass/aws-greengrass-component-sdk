@@ -1,16 +1,16 @@
 {
   "RecipeFormatVersion": "2020-01-25",
-  "ComponentName": "com.example.UpdateThingShadowC",
+  "ComponentName": "com.example.GetThingShadowRust",
   "ComponentVersion": "1.0.0",
-  "ComponentDescription": "A component that updates a thing shadow.",
+  "ComponentDescription": "A component that gets a thing shadow.",
   "ComponentPublisher": "Amazon",
   "ComponentConfiguration": {
     "DefaultConfiguration": {
       "accessControl": {
         "aws.greengrass.ShadowManager": {
-          "com.example.UpdateThingShadowC:shadow:1": {
-            "policyDescription": "Allows updating thing shadows.",
-            "operations": ["aws.greengrass#UpdateThingShadow"],
+          "com.example.GetThingShadowRust:shadow:1": {
+            "policyDescription": "Allows getting thing shadows.",
+            "operations": ["aws.greengrass#GetThingShadow"],
             "resources": ["*"]
           }
         }
@@ -23,11 +23,11 @@
         "os": "linux"
       },
       "Lifecycle": {
-        "run": "{artifacts:path}/sample_update_thing_shadow"
+        "run": "{artifacts:path}/get_thing_shadow"
       },
       "Artifacts": [
         {
-          "URI": "s3://amzn-s3-demo-bucket/artifacts/com.example.UpdateThingShadowC/1.0.0/sample_update_thing_shadow",
+          "URI": "s3://amzn-s3-demo-bucket/artifacts/com.example.GetThingShadowRust/1.0.0/get_thing_shadow",
           "Permission": {
             "Execute": "OWNER"
           }

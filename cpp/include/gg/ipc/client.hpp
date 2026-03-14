@@ -160,6 +160,31 @@ public:
         bool &value
     ) noexcept;
 
+    std::error_code get_thing_shadow(
+        std::string_view thing_name,
+        std::optional<std::string_view> shadow_name,
+        std::span<std::byte> payload_mem,
+        std::string_view &payload
+    ) noexcept;
+
+    std::error_code update_thing_shadow(
+        std::string_view thing_name,
+        std::optional<std::string_view> shadow_name,
+        std::string_view payload,
+        std::span<std::byte> response_mem = {},
+        std::string_view *response = nullptr
+    ) noexcept;
+
+    std::error_code delete_thing_shadow(
+        std::string_view thing_name, std::optional<std::string_view> shadow_name
+    ) noexcept;
+
+    std::error_code list_named_shadows_for_thing(
+        std::string_view thing_name,
+        void (*callback)(void *ctx, std::string_view shadow_name),
+        void *ctx = nullptr
+    ) noexcept;
+
     std::error_code subscribe_to_configuration_update(
         std::span<const Buffer> key_path,
         std::optional<std::string_view> component_name,
