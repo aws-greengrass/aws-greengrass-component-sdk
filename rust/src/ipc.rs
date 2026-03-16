@@ -957,7 +957,6 @@ mod test {
     pub(crate) fn run_ipc_handshake_test<F: FnOnce() -> Result<()>>(
         test_body: F,
     ) -> Result<()> {
-        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
         unsafe {
             Result::from(c::gg_test_setup_ipc(
                 c"/tmp/gg-test".as_ptr(),
@@ -993,7 +992,6 @@ mod test {
         packet_sequence: c::GgipcPacketSequence,
         test_body: F,
     ) -> Result<()> {
-        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
         unsafe {
             Result::from(c::gg_test_setup_ipc(
                 c"/tmp/gg-test".as_ptr(),
@@ -1046,6 +1044,7 @@ mod test {
 
     #[test]
     fn test_connect_okay() -> Result<()> {
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
         run_ipc_handshake_test(|| {
             let sdk = Sdk::init();
             sdk.connect()
@@ -1054,6 +1053,7 @@ mod test {
 
     #[test]
     fn test_connect_with_token_okay() -> Result<()> {
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
         run_ipc_handshake_test(|| unsafe {
             // Unset env vars to force explicit token usage
             libc::unsetenv(c"SVCUID".as_ptr());
@@ -1071,6 +1071,7 @@ mod test {
 
     #[test]
     fn test_publish_to_iot_core_okay() -> Result<()> {
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
         let topic = "my/topic";
         let payload_base64 = "SGVsbG8gd29ybGQh";
         let qos = "0";
@@ -1095,6 +1096,7 @@ mod test {
 
     #[test]
     fn test_publish_to_iot_core_bad_alloc() -> Result<()> {
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
         run_ipc_handshake_test(|| {
             let sdk = Sdk::init();
             sdk.connect()?;
@@ -1109,6 +1111,7 @@ mod test {
 
     #[test]
     fn test_publish_to_iot_core_rejected() -> Result<()> {
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
         let topic = "my/topic";
         let payload_base64 = "SGVsbG8gd29ybGQh";
         let qos = "0";
@@ -1140,6 +1143,7 @@ mod test {
 
     #[test]
     fn test_get_thing_shadow_okay() -> Result<()> {
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
         let thing_name = "MyThing";
         let shadow_name = "myShadow";
         let payload = "hello";
@@ -1165,6 +1169,7 @@ mod test {
 
     #[test]
     fn test_get_thing_shadow_rejected() -> Result<()> {
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
         let thing_name = "MyThing";
         let shadow_name = "myShadow";
         let seq = unsafe {
@@ -1187,6 +1192,7 @@ mod test {
 
     #[test]
     fn test_update_thing_shadow_okay() -> Result<()> {
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
         let thing_name = "MyThing";
         let shadow_name = "myShadow";
         let payload = b"hello";
@@ -1210,6 +1216,7 @@ mod test {
 
     #[test]
     fn test_update_thing_shadow_rejected() -> Result<()> {
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
         let thing_name = "MyThing";
         let shadow_name = "myShadow";
         let payload = b"hello";
@@ -1234,6 +1241,7 @@ mod test {
 
     #[test]
     fn test_delete_thing_shadow_okay() -> Result<()> {
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
         let thing_name = "MyThing";
         let shadow_name = "myShadow";
         let seq = unsafe {
@@ -1254,6 +1262,7 @@ mod test {
 
     #[test]
     fn test_delete_thing_shadow_rejected() -> Result<()> {
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
         let thing_name = "MyThing";
         let shadow_name = "myShadow";
         let seq = unsafe {
@@ -1341,6 +1350,7 @@ mod test {
 
     #[test]
     fn test_list_named_shadows_rejected() -> Result<()> {
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
         let thing_name = "MyThing";
         let seq = unsafe {
             c::gg_test_shadow_list_error_sequence(1, thing_name.into())
@@ -1461,6 +1471,7 @@ mod test {
 
     #[test]
     fn test_subscribe_to_iot_core_okay() -> Result<()> {
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
         let topic = "my/topic";
         let payload_base64 = "SGVsbG8gd29ybGQh";
         let qos = "0";
