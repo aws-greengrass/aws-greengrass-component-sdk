@@ -31,8 +31,9 @@ jobs:
       - &install_nix
         name: Install Nix
         run: |
-          curl --proto '=https' --tlsv1.2 -sSf -L \
-            https://install.lix.systems/lix | sh -s -- install --no-confirm
+          curl --proto '=https' --tlsv1.2 -sSfL \
+            https://artifacts.nixos.org/nix-installer \
+            | sh -s -- install --no-confirm
           sudo tee -a /etc/nix/nix.conf > /dev/null <<EOF
           extra-substituters = https://d17qv3gttz4z4k.cloudfront.net
           extra-trusted-public-keys = gglite-nix-cache-1:Zdz1mEqn//xa8ORxHkc76auwxmX8/6C2K/zWRjmq8Co=
