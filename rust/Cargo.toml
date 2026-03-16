@@ -1,5 +1,5 @@
 [package]
-name = "gg-sdk"
+name = "aws-greengrass-component-sdk"
 version = "1.0.0"
 edition = "2024"
 license = "Apache-2.0"
@@ -18,6 +18,9 @@ include = [
     "csrc/",
     "mock/",
 ]
+
+[lib]
+name = "gg_sdk"
 
 [build-dependencies]
 bindgen = "0.72.1"
