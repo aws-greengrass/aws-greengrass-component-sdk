@@ -8,6 +8,16 @@ description = "Lightweight AWS IoT Greengrass SDK"
 readme = "../README.md"
 keywords = ["aws", "greengrass", "iot"]
 categories = ["api-bindings"]
+include = [
+    "src/",
+    "examples/",
+    "build.rs",
+    "wrapper.h",
+    "include/",
+    "priv_include/",
+    "csrc/",
+    "mock/",
+]
 
 [build-dependencies]
 bindgen = "0.72.1"

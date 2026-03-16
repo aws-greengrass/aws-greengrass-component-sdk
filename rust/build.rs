@@ -12,20 +12,33 @@ fn main() {
         env::set_var("SOURCE_DATE_EPOCH", "0");
     }
 
-    let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
-    let project_root =
-        PathBuf::from(&manifest_dir).parent().unwrap().to_path_buf();
+    let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
+
+    // Support both layouts:
+    // - Development: C sources are in the parent directory (../include, ../src, etc.)
+    // - Packaged crate: C sources are copied into the crate directory
+    //   (include/, csrc/, etc.)
+    let (include_dir, priv_include_dir, mock_dir, c_src_dir);
+    if manifest_dir.join("include").is_dir() {
+        // Packaged crate layout
+        include_dir = manifest_dir.join("include");
+        priv_include_dir = manifest_dir.join("priv_include");
+        mock_dir = manifest_dir.join("mock");
+        c_src_dir = manifest_dir.join("csrc");
+    } else {
+        // Development layout (rust/ is a subdirectory of the project root)
+        let project_root = manifest_dir.parent().unwrap().to_path_buf();
+        include_dir = project_root.join("include");
+        priv_include_dir = project_root.join("priv_include");
+        mock_dir = project_root.join("mock");
+        c_src_dir = project_root.join("src");
+    }
 
     bindgen::Builder::default()
-        .header(
-            PathBuf::from(&manifest_dir)
-                .join("wrapper.h")
-                .to_str()
-                .unwrap(),
-        )
-        .clang_arg(format!("-I{}", project_root.join("include").display()))
-        .clang_arg(format!("-I{}", project_root.join("priv_include").display()))
-        .clang_arg(format!("-I{}", project_root.join("mock").display()))
+        .header(manifest_dir.join("wrapper.h").to_str().unwrap())
+        .clang_arg(format!("-I{}", include_dir.display()))
+        .clang_arg(format!("-I{}", priv_include_dir.display()))
+        .clang_arg(format!("-I{}", mock_dir.display()))
         .default_enum_style(bindgen::EnumVariation::Rust {
             non_exhaustive: false,
         })
@@ -49,11 +62,11 @@ fn main() {
         .raw_line("#![allow(clippy::pedantic)]")
         .generate()
         .unwrap()
-        .write_to_file(PathBuf::from(&manifest_dir).join("src/c.rs"))
+        .write_to_file(manifest_dir.join("src/c.rs"))
         .unwrap();
 
     let mut src_files = Vec::new();
-    let mut dirs = vec![project_root.join("src"), project_root.join("mock")];
+    let mut dirs = vec![c_src_dir.clone(), mock_dir.clone()];
     while let Some(dir) = dirs.pop() {
         for entry in std::fs::read_dir(dir).unwrap() {
             let entry = entry.unwrap();
@@ -73,9 +86,9 @@ fn main() {
 
     build
         .files(&src_files)
-        .include(project_root.join("include"))
-        .include(project_root.join("priv_include"))
-        .include(project_root.join("mock"))
+        .include(&include_dir)
+        .include(&priv_include_dir)
+        .include(&mock_dir)
         .include(&manifest_dir)
         .flag("-pthread")
         .flag("-fno-strict-aliasing")
@@ -98,8 +111,8 @@ fn main() {
     build.compile("gg-sdk");
 
     println!("cargo:rerun-if-changed=wrapper.h");
-    println!("cargo:rerun-if-changed=../src");
-    println!("cargo:rerun-if-changed=../include");
-    println!("cargo:rerun-if-changed=../priv_include");
-    println!("cargo:rerun-if-changed=../mock");
+    println!("cargo:rerun-if-changed={}", c_src_dir.display());
+    println!("cargo:rerun-if-changed={}", include_dir.display());
+    println!("cargo:rerun-if-changed={}", priv_include_dir.display());
+    println!("cargo:rerun-if-changed={}", mock_dir.display());
 }

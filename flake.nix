@@ -345,6 +345,17 @@
           };
         };
 
+        apps.package-rust-crate = pkgs: ''
+          set -euo pipefail
+          cd "$(${pkgs.git}/bin/git rev-parse --show-toplevel)/rust"
+          cleanup() { rm -rf include priv_include csrc mock; }
+          trap cleanup EXIT
+          cleanup
+          cp -r ../include ../priv_include ../mock .
+          cp -r ../src csrc
+          cargo package "$@"
+        '';
+
         legacyPackages = pkgs: {
           _type = "pkgs";
           cached-paths = pkgs.stdenv.mkDerivation {
