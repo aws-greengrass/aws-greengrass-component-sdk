@@ -325,6 +325,50 @@ impl Sdk {
         })
     }
 
+    /// Update component state.
+    ///
+    /// Reports component state to the Greengrass nucleus.
+    ///
+    /// See: <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-component-lifecycle.html#ipc-operation-updatestate>
+    ///
+    /// # Errors
+    /// Returns error if state update fails.
+    pub fn update_state(&self, state: ComponentState) -> Result<()> {
+        let c_state = match state {
+            ComponentState::Running => {
+                c::GgComponentState::GG_COMPONENT_STATE_RUNNING
+            }
+            ComponentState::Errored => {
+                c::GgComponentState::GG_COMPONENT_STATE_ERRORED
+            }
+        };
+        Result::from(unsafe { c::ggipc_update_state(c_state) })
+    }
+
+    /// Restart a Greengrass component.
+    ///
+    /// Requests the nucleus to restart the specified component.
+    ///
+    /// See: <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-deployments-components.html#ipc-operation-restartcomponent>
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use gg_sdk::Sdk;
+    ///
+    /// let sdk = Sdk::init();
+    /// sdk.connect()?;
+    ///
+    /// sdk.restart_component("com.example.MyComponent")?;
+    /// # Ok::<(), gg_sdk::Error>(())
+    /// ```
+    ///
+    /// # Errors
+    /// Returns error if restart fails.
+    pub fn restart_component(&self, component_name: &str) -> Result<()> {
+        Result::from(unsafe { c::ggipc_restart_component(component_name.into()) })
+    }
+
     /// Get component configuration value.
     ///
     /// Retrieves configuration for the specified key path. Pass empty slice for complete config.
@@ -457,48 +501,80 @@ impl Sdk {
         inner(key_path, timestamp, value_to_merge.into())
     }
 
-    /// Update component state.
+    /// Subscribe to component configuration updates.
     ///
-    /// Reports component state to the Greengrass nucleus.
+    /// Receives notifications when configuration changes for the specified key path.
+    /// Requires `aws.greengrass#SubscribeToConfigurationUpdate` authorization.
     ///
-    /// See: <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-component-lifecycle.html#ipc-operation-updatestate>
+    /// See: <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-component-configuration.html#ipc-operation-subscribetoconfigurationupdate>
     ///
     /// # Errors
-    /// Returns error if state update fails.
-    pub fn update_state(&self, state: ComponentState) -> Result<()> {
-        let c_state = match state {
-            ComponentState::Running => {
-                c::GgComponentState::GG_COMPONENT_STATE_RUNNING
-            }
-            ComponentState::Errored => {
-                c::GgComponentState::GG_COMPONENT_STATE_ERRORED
-            }
-        };
-        Result::from(unsafe { c::ggipc_update_state(c_state) })
-    }
+    /// Returns error if subscription fails.
+    pub fn subscribe_to_configuration_update<'a, F: Fn(&str, &[&str])>(
+        &self,
+        component_name: Option<&str>,
+        key_path: &[&str],
+        callback: &'a F,
+    ) -> Result<Subscription<'a, F>> {
+        extern "C" fn trampoline<F: Fn(&str, &[&str])>(
+            ctx: *mut ffi::c_void,
+            component_name: c::GgBuffer,
+            key_path: c::GgList,
+            _handle: c::GgIpcSubscriptionHandle,
+        ) {
+            let cb = unsafe { &*ctx.cast::<F>() };
+            let component_str = unsafe {
+                str::from_utf8_unchecked(slice::from_raw_parts(
+                    component_name.data,
+                    component_name.len,
+                ))
+            };
+            let path_objs =
+                unsafe { slice::from_raw_parts(key_path.items, key_path.len) };
 
-    /// Restart a Greengrass component.
-    ///
-    /// Requests the nucleus to restart the specified component.
-    ///
-    /// See: <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-deployments-components.html#ipc-operation-restartcomponent>
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use gg_sdk::Sdk;
-    ///
-    /// let sdk = Sdk::init();
-    /// sdk.connect()?;
-    ///
-    /// sdk.restart_component("com.example.MyComponent")?;
-    /// # Ok::<(), gg_sdk::Error>(())
-    /// ```
-    ///
-    /// # Errors
-    /// Returns error if restart fails.
-    pub fn restart_component(&self, component_name: &str) -> Result<()> {
-        Result::from(unsafe { c::ggipc_restart_component(component_name.into()) })
+            let mut path_strs_mem = [MaybeUninit::uninit(); MAX_KEY_PATH_LEN];
+            for (i, obj) in path_objs.iter().enumerate() {
+                let buf = unsafe { c::gg_obj_into_buf(*obj) };
+                let s = unsafe {
+                    str::from_utf8_unchecked(slice::from_raw_parts(
+                        buf.data, buf.len,
+                    ))
+                };
+                path_strs_mem[i].write(s);
+            }
+            let path_strs = unsafe {
+                slice::from_raw_parts(
+                    path_strs_mem.as_ptr().cast::<&str>(),
+                    path_objs.len(),
+                )
+            };
+
+            cb(component_str, path_strs);
+        }
+
+        let mut c_key_path_mem = [MaybeUninit::uninit(); MAX_KEY_PATH_LEN];
+        let c_key_path = key_path_to_buf_list(key_path, &mut c_key_path_mem)?;
+
+        let component_buf = component_name.map(c::GgBuffer::from);
+
+        let ctx = callback as *const F;
+        let mut handle = c::GgIpcSubscriptionHandle { val: 0 };
+
+        Result::from(unsafe {
+            c::ggipc_subscribe_to_configuration_update(
+                component_buf.as_ref().map_or(ptr::null(), ptr::from_ref),
+                c_key_path,
+                Some(trampoline::<F>),
+                ctx.cast::<ffi::c_void>().cast_mut(),
+                &raw mut handle,
+            )
+        })?;
+
+        debug_assert!(handle.val != 0);
+        Ok(Subscription {
+            handle,
+            phantom: PhantomData,
+        })
     }
 
     /// Get the shadow for a thing.
@@ -640,82 +716,6 @@ impl Sdk {
                 Some(trampoline::<F>),
                 ctx.cast::<ffi::c_void>(),
             )
-        })
-    }
-
-    /// Subscribe to component configuration updates.
-    ///
-    /// Receives notifications when configuration changes for the specified key path.
-    /// Requires `aws.greengrass#SubscribeToConfigurationUpdate` authorization.
-    ///
-    /// See: <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-component-configuration.html#ipc-operation-subscribetoconfigurationupdate>
-    ///
-    /// # Errors
-    /// Returns error if subscription fails.
-    pub fn subscribe_to_configuration_update<'a, F: Fn(&str, &[&str])>(
-        &self,
-        component_name: Option<&str>,
-        key_path: &[&str],
-        callback: &'a F,
-    ) -> Result<Subscription<'a, F>> {
-        extern "C" fn trampoline<F: Fn(&str, &[&str])>(
-            ctx: *mut ffi::c_void,
-            component_name: c::GgBuffer,
-            key_path: c::GgList,
-            _handle: c::GgIpcSubscriptionHandle,
-        ) {
-            let cb = unsafe { &*ctx.cast::<F>() };
-            let component_str = unsafe {
-                str::from_utf8_unchecked(slice::from_raw_parts(
-                    component_name.data,
-                    component_name.len,
-                ))
-            };
-            let path_objs =
-                unsafe { slice::from_raw_parts(key_path.items, key_path.len) };
-
-            let mut path_strs_mem = [MaybeUninit::uninit(); MAX_KEY_PATH_LEN];
-            for (i, obj) in path_objs.iter().enumerate() {
-                let buf = unsafe { c::gg_obj_into_buf(*obj) };
-                let s = unsafe {
-                    str::from_utf8_unchecked(slice::from_raw_parts(
-                        buf.data, buf.len,
-                    ))
-                };
-                path_strs_mem[i].write(s);
-            }
-            let path_strs = unsafe {
-                slice::from_raw_parts(
-                    path_strs_mem.as_ptr().cast::<&str>(),
-                    path_objs.len(),
-                )
-            };
-
-            cb(component_str, path_strs);
-        }
-
-        let mut c_key_path_mem = [MaybeUninit::uninit(); MAX_KEY_PATH_LEN];
-        let c_key_path = key_path_to_buf_list(key_path, &mut c_key_path_mem)?;
-
-        let component_buf = component_name.map(c::GgBuffer::from);
-
-        let ctx = callback as *const F;
-        let mut handle = c::GgIpcSubscriptionHandle { val: 0 };
-
-        Result::from(unsafe {
-            c::ggipc_subscribe_to_configuration_update(
-                component_buf.as_ref().map_or(ptr::null(), ptr::from_ref),
-                c_key_path,
-                Some(trampoline::<F>),
-                ctx.cast::<ffi::c_void>().cast_mut(),
-                &raw mut handle,
-            )
-        })?;
-
-        debug_assert!(handle.val != 0);
-        Ok(Subscription {
-            handle,
-            phantom: PhantomData,
         })
     }
 
