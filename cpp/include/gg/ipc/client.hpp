@@ -86,7 +86,7 @@ public:
         return singleton;
     }
 
-    /// Connect to the Greengrass Nucleus from a component.
+    /// Connect to the Greengrass nucleus from a component.
     /// Uses SVCUID and AWS_GG_NUCLEUS_DOMAIN_SOCKET_FILEPATH_FOR_COMPONENT
     /// environment variables.
     /// Not thread-safe if another thread modifies environment variables.

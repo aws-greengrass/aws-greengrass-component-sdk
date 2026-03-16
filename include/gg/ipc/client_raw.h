@@ -17,7 +17,7 @@ typedef GgError GgIpcErrorCallback(
     void *ctx, GgBuffer error_code, GgBuffer message
 );
 
-/// Make a raw IPC call to Greengrass Nucleus.
+/// Make a raw IPC call to Greengrass nucleus.
 /// Invokes `result_callback` on success or `error_callback` on error.
 /// Returns GG_ERR_NOCONN if not connected, GG_ERR_NOMEM if insufficient
 /// resources, or GG_ERR_OK on success.
@@ -39,7 +39,7 @@ typedef GgError GgIpcSubscribeCallback(
     GgMap data
 );
 
-/// Make a raw IPC subscription call to Greengrass Nucleus.
+/// Make a raw IPC subscription call to Greengrass nucleus.
 /// Invokes `result_callback` on success or `error_callback` on error.
 /// Invokes `sub_callback` for each subscription event.
 /// If `sub_handle` is not NULL, sets it to the subscription handle on success.

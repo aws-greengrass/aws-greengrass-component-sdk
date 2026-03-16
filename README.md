@@ -3,7 +3,7 @@
 The `aws-greengrass-component-sdk` is a small-footprint library providing APIs
 for making AWS IoT Greengrass IPC calls in C, Rust, and C++. It enables
 Greengrass components to interact with the Greengrass runtime (Greengrass
-Nucleus or Greengrass Nucleus Lite) with less binary overhead. Components can
+nucleus or Greengrass nucleus lite) with less binary overhead. Components can
 use this SDK as an alternative to the `aws-iot-device-sdk-cpp-v2` or other
 language-specific device SDKs.
 
