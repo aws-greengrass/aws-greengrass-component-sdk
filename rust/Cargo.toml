@@ -1,6 +1,6 @@
 [package]
 name = "gg-sdk"
-version = "0.0.2"
+version = "1.0.0"
 edition = "2024"
 license = "Apache-2.0"
 repository = "https://github.com/aws/aws-greengrass-component-sdk"

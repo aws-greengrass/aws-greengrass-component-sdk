@@ -7,14 +7,6 @@ nucleus or Greengrass nucleus lite) with less binary overhead. Components can
 use this SDK as an alternative to the `aws-iot-device-sdk-cpp-v2` or other
 language-specific device SDKs.
 
-### ⚠️ Important Notice ⚠️
-
-This library is in pre-release status. We encourage users to test it and report
-any bugs or missing features.
-
-For development purposes, it is recommended to pin your usage to a specific
-commit or tag.
-
 ## Building
 
 For building the SDK and samples for C and/or C++, see the
