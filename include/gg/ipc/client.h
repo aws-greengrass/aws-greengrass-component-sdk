@@ -104,6 +104,18 @@ GgError ggipc_subscribe_to_iot_core(
     GgIpcSubscriptionHandle *handle
 );
 
+/// Update the state of this component.
+/// Reports component state to the Greengrass nucleus.
+/// See:
+/// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-component-lifecycle.html#ipc-operation-updatestate>
+GgError ggipc_update_state(GgComponentState state);
+
+/// Restart a Greengrass component.
+/// Requests the nucleus to restart the specified component.
+/// See:
+/// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-deployments-components.html#ipc-operation-restartcomponent>
+GgError ggipc_restart_component(GgBuffer component_name);
+
 /// Get component configuration value.
 /// Retrieves configuration for the specified key path.
 /// Pass empty list for complete config.
@@ -149,17 +161,28 @@ GgError ggipc_update_config(
     GgObject value_to_merge
 );
 
-/// Update the state of this component.
-/// Reports component state to the Greengrass nucleus.
-/// See:
-/// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-component-lifecycle.html#ipc-operation-updatestate>
-GgError ggipc_update_state(GgComponentState state);
+typedef void GgIpcSubscribeToConfigurationUpdateCallback(
+    void *ctx,
+    GgBuffer component_name,
+    GgList key_path,
+    GgIpcSubscriptionHandle handle
+);
 
-/// Restart a Greengrass component.
-/// Requests the nucleus to restart the specified component.
+/// Subscribe to component configuration updates.
+/// Receives notifications when configuration changes for the specified key
+/// path.
+/// Pass NULL for `component_name` to use the current component.
+/// Requires aws.greengrass#SubscribeToConfigurationUpdate authorization.
 /// See:
-/// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-deployments-components.html#ipc-operation-restartcomponent>
-GgError ggipc_restart_component(GgBuffer component_name);
+/// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-component-configuration.html#ipc-operation-subscribetoconfigurationupdate>
+ACCESS(read_only, 1) NONNULL(3)
+GgError ggipc_subscribe_to_configuration_update(
+    const GgBuffer *component_name,
+    GgBufList key_path,
+    GgIpcSubscribeToConfigurationUpdateCallback *callback,
+    void *ctx,
+    GgIpcSubscriptionHandle *handle
+);
 
 /// Get the shadow for a thing.
 /// Retrieves the shadow document for the specified thing and shadow name.
@@ -213,29 +236,6 @@ typedef void GgIpcListNamedShadowsCallback(void *ctx, GgBuffer shadow_name);
 NONNULL(2)
 GgError ggipc_list_named_shadows_for_thing(
     GgBuffer thing_name, GgIpcListNamedShadowsCallback *callback, void *ctx
-);
-
-typedef void GgIpcSubscribeToConfigurationUpdateCallback(
-    void *ctx,
-    GgBuffer component_name,
-    GgList key_path,
-    GgIpcSubscriptionHandle handle
-);
-
-/// Subscribe to component configuration updates.
-/// Receives notifications when configuration changes for the specified key
-/// path.
-/// Pass NULL for `component_name` to use the current component.
-/// Requires aws.greengrass#SubscribeToConfigurationUpdate authorization.
-/// See:
-/// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-component-configuration.html#ipc-operation-subscribetoconfigurationupdate>
-ACCESS(read_only, 1) NONNULL(3)
-GgError ggipc_subscribe_to_configuration_update(
-    const GgBuffer *component_name,
-    GgBufList key_path,
-    GgIpcSubscribeToConfigurationUpdateCallback *callback,
-    void *ctx,
-    GgIpcSubscriptionHandle *handle
 );
 
 #endif

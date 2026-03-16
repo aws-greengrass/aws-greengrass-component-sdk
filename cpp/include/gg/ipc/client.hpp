@@ -150,18 +150,6 @@ public:
         Subscription *handle = nullptr
     ) noexcept;
 
-    /// Update component configuration.
-    /// Merges the provided value into the component's configuration at the key
-    /// path.
-    /// Requires aws.greengrass#UpdateConfiguration authorization.
-    /// See:
-    /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-component-configuration.html#ipc-operation-updateconfiguration>
-    std::error_code update_config(
-        std::span<const Buffer> key_path,
-        const Object &value,
-        std::chrono::system_clock::time_point timestamp = {}
-    ) noexcept;
-
     /// Update the state of this component.
     /// Reports component state to the Greengrass nucleus.
     /// See:
@@ -173,19 +161,6 @@ public:
     /// See:
     /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-deployments-components.html#ipc-operation-restartcomponent>
     std::error_code restart_component(std::string_view component_name) noexcept;
-
-    /// Get component configuration value as a string.
-    /// Alternative API to the Object overload for string type values.
-    /// Pass std::nullopt for component_name to use the current component.
-    /// Requires aws.greengrass#GetConfiguration authorization.
-    /// See:
-    /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-component-configuration.html#ipc-operation-getconfiguration>
-    std::error_code get_config(
-        std::span<const Buffer> key_path,
-        std::optional<std::string_view> component_name,
-        std::span<std::byte> value_mem,
-        std::string_view &value
-    ) noexcept;
 
     /// Get component configuration value.
     /// Retrieves configuration for the specified key path.
@@ -199,6 +174,19 @@ public:
         std::optional<std::string_view> component_name,
         std::span<std::byte> value_mem,
         Object &value
+    ) noexcept;
+
+    /// Get component configuration value as a string.
+    /// Alternative API to the Object overload for string type values.
+    /// Pass std::nullopt for component_name to use the current component.
+    /// Requires aws.greengrass#GetConfiguration authorization.
+    /// See:
+    /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-component-configuration.html#ipc-operation-getconfiguration>
+    std::error_code get_config(
+        std::span<const Buffer> key_path,
+        std::optional<std::string_view> component_name,
+        std::span<std::byte> value_mem,
+        std::string_view &value
     ) noexcept;
 
     /// Get component configuration value as an integer.
@@ -235,6 +223,32 @@ public:
         std::span<const Buffer> key_path,
         std::optional<std::string_view> component_name,
         bool &value
+    ) noexcept;
+
+    /// Update component configuration.
+    /// Merges the provided value into the component's configuration at the key
+    /// path.
+    /// Requires aws.greengrass#UpdateConfiguration authorization.
+    /// See:
+    /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-component-configuration.html#ipc-operation-updateconfiguration>
+    std::error_code update_config(
+        std::span<const Buffer> key_path,
+        const Object &value,
+        std::chrono::system_clock::time_point timestamp = {}
+    ) noexcept;
+
+    /// Subscribe to component configuration updates.
+    /// Receives notifications when configuration changes for the specified key
+    /// path.
+    /// Pass std::nullopt for component_name to use the current component.
+    /// Requires aws.greengrass#SubscribeToConfigurationUpdate authorization.
+    /// See:
+    /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-component-configuration.html#ipc-operation-subscribetoconfigurationupdate>
+    std::error_code subscribe_to_configuration_update(
+        std::span<const Buffer> key_path,
+        std::optional<std::string_view> component_name,
+        ConfigurationUpdateCallback &callback,
+        Subscription *handle = nullptr
     ) noexcept;
 
     /// Get the shadow for a thing.
@@ -287,20 +301,6 @@ public:
         std::string_view thing_name,
         void (*callback)(void *ctx, std::string_view shadow_name),
         void *ctx = nullptr
-    ) noexcept;
-
-    /// Subscribe to component configuration updates.
-    /// Receives notifications when configuration changes for the specified key
-    /// path.
-    /// Pass std::nullopt for component_name to use the current component.
-    /// Requires aws.greengrass#SubscribeToConfigurationUpdate authorization.
-    /// See:
-    /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-component-configuration.html#ipc-operation-subscribetoconfigurationupdate>
-    std::error_code subscribe_to_configuration_update(
-        std::span<const Buffer> key_path,
-        std::optional<std::string_view> component_name,
-        ConfigurationUpdateCallback &callback,
-        Subscription *handle = nullptr
     ) noexcept;
 };
 
