@@ -56,7 +56,7 @@ static GgError response_handler(void *ctx, GgMap result) {
     }
 
     GgBuffer b64_payload = gg_obj_into_buf(*payload_obj);
-    if (!gg_base64_decode(b64_payload, payload)) {
+    if ((payload != NULL) && !gg_base64_decode(b64_payload, payload)) {
         GG_LOGE("Failed to decode shadow payload.");
         return GG_ERR_PARSE;
     }
