@@ -366,7 +366,7 @@ impl Sdk {
 
     /// Get component configuration value as a string.
     ///
-    /// Retrieves string configuration for the specified key path.
+    /// Alternative API to [`Sdk::get_config`] for string type values.
     /// Requires `aws.greengrass#GetConfiguration` authorization.
     ///
     /// See: <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-component-configuration.html#ipc-operation-getconfiguration>
@@ -480,9 +480,8 @@ impl Sdk {
     /// Restart a Greengrass component.
     ///
     /// Requests the nucleus to restart the specified component.
-    /// Requires appropriate lifecycle management authorization.
     ///
-    /// See: <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-component-lifecycle.html>
+    /// See: <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-deployments-components.html#ipc-operation-restartcomponent>
     ///
     /// # Examples
     ///
@@ -581,6 +580,7 @@ impl Sdk {
 
     /// Delete the shadow for a thing.
     ///
+    /// Deletes the shadow document for the specified thing and shadow name.
     /// Pass `None` for `shadow_name` to use the classic shadow.
     /// Requires `aws.greengrass#DeleteThingShadow` authorization.
     ///

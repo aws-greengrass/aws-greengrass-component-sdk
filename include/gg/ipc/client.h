@@ -65,7 +65,7 @@ typedef void GgIpcSubscribeToTopicCallback(
 
 /// Subscribe to messages on a local pub/sub topic.
 /// Receives messages from other Greengrass components publishing to the topic.
-/// Payload will be a map for json messages and a buffer for binary messages.
+/// Payload will be a map for JSON messages and a buffer for binary messages.
 /// Requires aws.greengrass#SubscribeToTopic authorization.
 /// See:
 /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-publish-subscribe.html#ipc-operation-subscribetotopic>
@@ -109,7 +109,8 @@ GgError ggipc_subscribe_to_iot_core(
 /// Pass empty list for complete config.
 /// If `value` is not NULL, `value_mem` must have enough memory to hold the
 /// output value, and on success, the result will be written to `value`.
-/// `value_mem` must remain valid and unmodified directly while `value` is used.
+/// `value_mem` must remain valid and unmodified while `value` is used.
+/// `component_name` may be NULL to use the current component.
 /// Requires aws.greengrass#GetConfiguration authorization.
 /// See:
 /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-component-configuration.html#ipc-operation-getconfiguration>
@@ -122,9 +123,10 @@ GgError ggipc_get_config(
 );
 
 /// Get component configuration value as a string.
+/// Alternative API to ggipc_get_config for string type values.
 /// `value` must point to a buffer large enough to hold the result, and will be
 /// updated to the result string.
-/// Alternative API to ggipc_get_config for string type values.
+/// `component_name` may be NULL to use the current component.
 /// Requires aws.greengrass#GetConfiguration authorization.
 /// See:
 /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-component-configuration.html#ipc-operation-getconfiguration>
@@ -135,7 +137,10 @@ GgError ggipc_get_config_str(
 
 /// Update component configuration.
 /// Merges the provided value into the component's configuration at the key
-/// path. Requires aws.greengrass#UpdateConfiguration authorization. See:
+/// path.
+/// `timestamp` may be NULL.
+/// Requires aws.greengrass#UpdateConfiguration authorization.
+/// See:
 /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-component-configuration.html#ipc-operation-updateconfiguration>
 ACCESS(read_only, 2)
 GgError ggipc_update_config(
@@ -147,35 +152,37 @@ GgError ggipc_update_config(
 /// Update the state of this component.
 /// Reports component state to the Greengrass nucleus.
 /// See:
-/// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-component-lifecycle.html
+/// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-component-lifecycle.html#ipc-operation-updatestate>
 GgError ggipc_update_state(GgComponentState state);
 
 /// Restart a Greengrass component.
 /// Requests the nucleus to restart the specified component.
 /// See:
-/// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-component-lifecycle.html
+/// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-deployments-components.html#ipc-operation-restartcomponent>
 GgError ggipc_restart_component(GgBuffer component_name);
 
 /// Get the shadow for a thing.
 /// Retrieves the shadow document for the specified thing and shadow name.
-/// `shadow_name` is optional; pass the empty string to use the thing's classic
-/// shadow. `payload` must point to a buffer large enough to hold the decoded
-/// result. Requires aws.greengrass#GetThingShadow authorization. See:
+/// Pass NULL for `shadow_name` to use the thing's classic shadow.
+/// `payload` must point to a buffer large enough to hold the decoded result.
+/// Requires aws.greengrass#GetThingShadow authorization.
+/// See:
 /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-shadows.html#ipc-operation-getthingshadow>
-ACCESS(read_write, 3)
+ACCESS(read_only, 2) ACCESS(read_write, 3)
 GgError ggipc_get_thing_shadow(
     GgBuffer thing_name, const GgBuffer *shadow_name, GgBuffer *payload
 );
 
 /// Update the shadow for a thing.
 /// Updates the shadow document for the specified thing and shadow name.
-/// `shadow_name` is optional; pass the empty string to use the thing's classic
-/// shadow. `payload` contains the shadow update document. `response` is
-/// optional; pass NULL to ignore the response, or a buffer large enough to
-/// hold the decoded result.
+/// `payload` contains the shadow update document.
+/// If `response` is non-NULL, it must point to a buffer large enough to hold
+/// the decoded result.
+/// Pass NULL for `shadow_name` to use the thing's classic shadow.
 /// Requires aws.greengrass#UpdateThingShadow authorization.
 /// See:
 /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-shadows.html#ipc-operation-updatethingshadow>
+ACCESS(read_only, 2) ACCESS(read_write, 4)
 GgError ggipc_update_thing_shadow(
     GgBuffer thing_name,
     const GgBuffer *shadow_name,
@@ -185,9 +192,11 @@ GgError ggipc_update_thing_shadow(
 
 /// Delete the shadow for a thing.
 /// Deletes the shadow document for the specified thing and shadow name.
-/// `shadow_name` is optional; pass the empty string to use the thing's classic
-/// shadow. Requires aws.greengrass#DeleteThingShadow authorization. See:
+/// Pass NULL for `shadow_name` to use the thing's classic shadow.
+/// Requires aws.greengrass#DeleteThingShadow authorization.
+/// See:
 /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-shadows.html#ipc-operation-deletethingshadow>
+ACCESS(read_only, 2)
 GgError ggipc_delete_thing_shadow(
     GgBuffer thing_name, const GgBuffer *shadow_name
 );
@@ -196,7 +205,8 @@ typedef void GgIpcListNamedShadowsCallback(void *ctx, GgBuffer shadow_name);
 
 /// List named shadows for a thing.
 /// Lists all named shadows for the specified thing, handling pagination
-/// internally. The callback is invoked once per shadow name.
+/// internally.
+/// The callback is invoked once per shadow name.
 /// Requires aws.greengrass#ListNamedShadowsForThing authorization.
 /// See:
 /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-shadows.html#ipc-operation-listnamedshadowsforthing>
@@ -214,8 +224,10 @@ typedef void GgIpcSubscribeToConfigurationUpdateCallback(
 
 /// Subscribe to component configuration updates.
 /// Receives notifications when configuration changes for the specified key
-/// path. Pass NULL for component_name to refer to current component. Requires
-/// aws.greengrass#SubscribeToConfigurationUpdate authorization. See:
+/// path.
+/// Pass NULL for `component_name` to use the current component.
+/// Requires aws.greengrass#SubscribeToConfigurationUpdate authorization.
+/// See:
 /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-component-configuration.html#ipc-operation-subscribetoconfigurationupdate>
 ACCESS(read_only, 1) NONNULL(3)
 GgError ggipc_subscribe_to_configuration_update(
