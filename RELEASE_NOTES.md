@@ -1,3 +1,9 @@
+# Release Notes v1.0.1
+
+## Bug Fixes
+
+- Fixed Rust crate packaging to include C source files required for compilation.
+
 # Release Notes v1.0.0
 
 This is the initial release of `aws-greengrass-component-sdk`. This SDK provides
