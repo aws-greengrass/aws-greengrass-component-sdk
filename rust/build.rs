@@ -55,14 +55,9 @@ fn main() {
         .allowlist_type("Gg.*")
         .allowlist_type("GgIpc.*")
         .allowlist_var("GG_.*")
-        .raw_line("#![allow(non_upper_case_globals)]")
-        .raw_line("#![allow(non_camel_case_types)]")
-        .raw_line("#![allow(non_snake_case)]")
-        .raw_line("#![allow(dead_code)]")
-        .raw_line("#![allow(clippy::pedantic)]")
         .generate()
         .unwrap()
-        .write_to_file(manifest_dir.join("src/c.rs"))
+        .write_to_file(PathBuf::from(env::var("OUT_DIR").unwrap()).join("c.rs"))
         .unwrap();
 
     let mut src_files = Vec::new();
