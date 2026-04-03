@@ -1,0 +1,39 @@
+{
+  "RecipeFormatVersion": "2020-01-25",
+  "ComponentName": "com.example.PubSubPublisherPython",
+  "ComponentVersion": "1.0.0",
+  "ComponentDescription": "A component that publishes messages.",
+  "ComponentPublisher": "Amazon",
+  "ComponentConfiguration": {
+    "DefaultConfiguration": {
+      "accessControl": {
+        "aws.greengrass.ipc.pubsub": {
+          "com.example.PubSubPublisherPython:pubsub:1": {
+            "policyDescription": "Allows access to publish to all topics.",
+            "operations": ["aws.greengrass#PublishToTopic"],
+            "resources": ["*"]
+          }
+        }
+      }
+    }
+  },
+  "Manifests": [
+    {
+      "Platform": {
+        "os": "linux",
+        "runtime": "*"
+      },
+      "Lifecycle": {
+        "run": "python3 -u {artifacts:path}/publish_to_topic.py"
+      },
+      "Artifacts": [
+        {
+          "URI": "s3://amzn-s3-demo-bucket/artifacts/com.example.PubSubPublisherPython/1.0.0/publish_to_topic.py",
+          "Permission": {
+            "Read": "ALL"
+          }
+        }
+      ]
+    }
+  ]
+}
