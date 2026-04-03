@@ -53,3 +53,5 @@ Macros:
   - REPRODUCIBLE=[[gnu::reproducible]]
   - FLAG_ENUM=[[gnu::flag_enum]]
   - ENUM_EXTENSIBILITY(x)=[[gnu::enum_extensibility(x)]]
+  - PyObject_HEAD=PyObject ob_base;
+  - PyVarObject_HEAD_INIT(x,y)={ { 1, x }, y },
