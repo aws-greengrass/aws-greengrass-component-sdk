@@ -485,9 +485,11 @@ impl Sdk {
                 key_path_to_buf_list(key_path, &mut c_key_path_mem)?;
 
             #[expect(clippy::cast_possible_wrap)]
+            #[allow(clippy::cast_lossless, clippy::needless_update)]
             let timespec = timestamp.map(|d| c::timespec {
-                tv_sec: d.as_secs() as i64,
-                tv_nsec: i64::from(d.subsec_nanos()),
+                tv_sec: d.as_secs() as _,
+                tv_nsec: d.subsec_nanos() as _,
+                ..c::timespec::default()
             });
 
             Result::from(unsafe {
