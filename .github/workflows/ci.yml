@@ -30,16 +30,15 @@ jobs:
           filter: "tree:0"
       - &install_nix
         name: Install Nix
+        env:
+          NIX_INSTALLER_EXTRA_CONF: |
+            extra-substituters = https://d17qv3gttz4z4k.cloudfront.net?priority=30
+            extra-trusted-public-keys = gglite-nix-cache-1:Zdz1mEqn//xa8ORxHkc76auwxmX8/6C2K/zWRjmq8Co=
+            log-lines = 0
         run: |
           curl --proto '=https' --tlsv1.2 -sSfL \
             https://artifacts.nixos.org/nix-installer \
-            | sh -s -- install --no-confirm
-          sudo tee -a /etc/nix/nix.conf > /dev/null <<EOF
-          extra-substituters = https://d17qv3gttz4z4k.cloudfront.net?priority=30
-          extra-trusted-public-keys = gglite-nix-cache-1:Zdz1mEqn//xa8ORxHkc76auwxmX8/6C2K/zWRjmq8Co=
-          log-lines = 0
-          EOF
-          sudo systemctl restart nix-daemon
+            | sh -s -- install --no-confirm --enable-flakes
       - run: nix flake check --no-build --all-systems -L
       - id: list-checks
         run:
