@@ -92,7 +92,7 @@ fn main() {
         .flag("-fno-semantic-interposition")
         .flag("-fno-unwind-tables")
         .flag("-fno-asynchronous-unwind-tables")
-        .flag("-fstrict-flex-arrays=3")
+        .flag_if_supported("-fstrict-flex-arrays=3")
         .define("_GNU_SOURCE", None)
         .define("GG_MODULE", "\"gg-sdk\"")
         .define("GG_LOG_LEVEL", "GG_LOG_DEBUG");
