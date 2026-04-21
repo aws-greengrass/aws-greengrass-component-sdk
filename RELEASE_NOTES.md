@@ -1,3 +1,10 @@
+# Release Notes v1.0.2
+
+## Bug Fixes
+
+- Fixed Rust crate build on 32-bit ARM targets.
+- Fixed Rust crate build with GCC 12 or earlier.
+
 # Release Notes v1.0.1
 
 ## Bug Fixes
