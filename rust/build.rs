@@ -34,8 +34,11 @@ fn main() {
         c_src_dir = project_root.join("src");
     }
 
+    let target = env::var("TARGET").unwrap();
+
     bindgen::Builder::default()
         .header(manifest_dir.join("wrapper.h").to_str().unwrap())
+        .clang_arg(format!("--target={target}"))
         .clang_arg(format!("-I{}", include_dir.display()))
         .clang_arg(format!("-I{}", priv_include_dir.display()))
         .clang_arg(format!("-I{}", mock_dir.display()))
