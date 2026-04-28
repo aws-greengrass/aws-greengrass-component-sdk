@@ -445,18 +445,6 @@ static GgError response_handler_inner(
     EventStreamCommonHeaders common_headers,
     EventStreamMessage msg
 ) {
-    if ((call_ctx->sub_callback != NULL)
-        && ((common_headers.message_flags & EVENTSTREAM_TERMINATE_STREAM)
-            != 0)) {
-        GG_LOGE(
-            "Terminate stream received on stream_id %" PRIi32
-            " for initial subscription response.",
-            common_headers.stream_id
-        );
-        clear_stream_index(index);
-        return GG_ERR_FAILURE;
-    }
-
     GgError ret = pass_response_to_user_callback(
         common_headers,
         msg,
@@ -471,7 +459,9 @@ static GgError response_handler_inner(
 
     // Must not error after user result callback returns ok
 
-    if (call_ctx->sub_callback == NULL) {
+    if ((call_ctx->sub_callback == NULL)
+        || ((common_headers.message_flags & EVENTSTREAM_TERMINATE_STREAM)
+            != 0)) {
         clear_stream_index(index);
     } else {
         set_stream_index(
