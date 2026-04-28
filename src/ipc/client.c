@@ -328,6 +328,26 @@ static void cleanup_pthread_cond(pthread_cond_t **cond) {
 }
 
 // Must hold stream_state_mtx
+static void close_stream(uint16_t index) {
+    int32_t stream_id = stream_state_id[index];
+    EventStreamHeader headers[] = {
+        { GG_STR(":message-type"),
+          { EVENTSTREAM_INT32, .int32 = EVENTSTREAM_APPLICATION_MESSAGE } },
+        { GG_STR(":message-flags"),
+          { EVENTSTREAM_INT32, .int32 = EVENTSTREAM_TERMINATE_STREAM } },
+        { GG_STR(":stream-id"), { EVENTSTREAM_INT32, .int32 = stream_id } },
+    };
+    size_t headers_len = sizeof(headers) / sizeof(headers[0]);
+
+    GG_LOGD(
+        "Sending subscription termination for stream id %" PRIi32 ".", stream_id
+    );
+    (void) ipc_send_packet(ipc_conn_fd, headers, headers_len, GG_NULL_READER);
+
+    clear_stream_index(index);
+}
+
+// Must hold stream_state_mtx
 static GgError handle_application_error(
     GgBuffer payload, GgIpcErrorCallback *error_callback, void *response_ctx
 ) {
@@ -445,6 +465,9 @@ static GgError response_handler_inner(
     EventStreamCommonHeaders common_headers,
     EventStreamMessage msg
 ) {
+    bool terminate
+        = (common_headers.message_flags & EVENTSTREAM_TERMINATE_STREAM) != 0;
+
     GgError ret = pass_response_to_user_callback(
         common_headers,
         msg,
@@ -453,16 +476,20 @@ static GgError response_handler_inner(
         call_ctx->response_ctx
     );
     if (ret != GG_ERR_OK) {
-        clear_stream_index(index);
+        if (!terminate) {
+            close_stream(index);
+        } else {
+            clear_stream_index(index);
+        }
         return ret;
     }
 
     // Must not error after user result callback returns ok
 
-    if ((call_ctx->sub_callback == NULL)
-        || ((common_headers.message_flags & EVENTSTREAM_TERMINATE_STREAM)
-            != 0)) {
+    if (terminate) {
         clear_stream_index(index);
+    } else if (call_ctx->sub_callback == NULL) {
+        close_stream(index);
     } else {
         set_stream_index(
             index,
@@ -760,11 +787,11 @@ static GgError dispatch_incoming_packet(int conn) {
         common_headers,
         msg
     );
-    if ((sub_ret != GG_ERR_OK)
-        || ((common_headers.message_flags & EVENTSTREAM_TERMINATE_STREAM)
-            != 0)) {
+    if ((common_headers.message_flags & EVENTSTREAM_TERMINATE_STREAM) != 0) {
         GG_LOGD("Closing stream %" PRIi32 " for %d", stream_id, conn);
         clear_stream_index(index);
+    } else if (sub_ret != GG_ERR_OK) {
+        close_stream(index);
     }
 
     return GG_ERR_OK;
@@ -810,20 +837,5 @@ void ggipc_close_subscription(GgIpcSubscriptionHandle handle) {
         return;
     }
 
-    int32_t stream_id = stream_state_id[index];
-    EventStreamHeader headers[] = {
-        { GG_STR(":message-type"),
-          { EVENTSTREAM_INT32, .int32 = EVENTSTREAM_APPLICATION_MESSAGE } },
-        { GG_STR(":message-flags"),
-          { EVENTSTREAM_INT32, .int32 = EVENTSTREAM_TERMINATE_STREAM } },
-        { GG_STR(":stream-id"), { EVENTSTREAM_INT32, .int32 = stream_id } },
-    };
-    size_t headers_len = sizeof(headers) / sizeof(headers[0]);
-
-    GG_LOGD(
-        "Sending subscription termination for stream id %" PRIi32 ".", stream_id
-    );
-    (void) ipc_send_packet(ipc_conn_fd, headers, headers_len, GG_NULL_READER);
-
-    clear_stream_index(index);
+    close_stream(index);
 }
