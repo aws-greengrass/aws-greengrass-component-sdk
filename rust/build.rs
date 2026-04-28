@@ -100,10 +100,13 @@ fn main() {
         .define("GG_MODULE", "\"gg-sdk\"")
         .define("GG_LOG_LEVEL", "GG_LOG_DEBUG");
 
+    if env::var("OPT_LEVEL").unwrap() == "z" {
+        build.flag_if_supported("-Oz");
+    }
+
     if env::var("PROFILE").unwrap() == "release" {
-        build.flag("-Oz");
         build.flag("-flto");
-        build.flag("-ffat-lto-objects");
+        build.flag_if_supported("-ffat-lto-objects");
     }
 
     build.compile("gg-sdk");
