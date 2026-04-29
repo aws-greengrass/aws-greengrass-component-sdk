@@ -1,3 +1,16 @@
+# Release Notes v1.0.3
+
+## Bug Fixes
+
+- Ensure error callback is called when subscription request fails.
+- Send IPC stream terminations to server when subscription is cleaned up by user
+  callback error.
+
+## Rust Improvements
+
+- Enable Rust crate build on older GCC versions.
+- Set bindgen clang target argument for Rust crate cross-compilation.
+
 # Release Notes v1.0.2
 
 ## Bug Fixes
