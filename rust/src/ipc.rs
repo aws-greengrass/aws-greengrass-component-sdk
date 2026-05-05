@@ -369,6 +369,63 @@ impl Sdk {
         Result::from(unsafe { c::ggipc_restart_component(component_name.into()) })
     }
 
+    /// Create a local deployment that merges configuration into one or more
+    /// already-deployed components.
+    ///
+    /// `component_to_configuration` is a slice of [`Kv`] pairs whose keys are
+    /// component names and whose values are maps of config keys to merge.
+    /// Pass an empty slice to omit.
+    ///
+    /// On success, the returned `&str` is a view into `deployment_id_mem`
+    /// holding the deployment id returned by the nucleus.
+    ///
+    /// See: <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-deployments-components.html#ipc-operation-createlocaldeployment>
+    ///
+    /// # Errors
+    /// Returns error if the IPC call fails or the nucleus rejects the deployment.
+    pub fn create_local_deployment<'a, 'b>(
+        &self,
+        component_to_configuration: &'a [Kv<'a>],
+        deployment_id_mem: &'b mut [MaybeUninit<u8>],
+    ) -> Result<&'b str> {
+        let mut value = c::GgBuffer {
+            data: deployment_id_mem.as_mut_ptr().cast::<u8>(),
+            len: deployment_id_mem.len(),
+        };
+        let args = c::GgCreateLocalDeploymentArgs {
+            component_to_configuration: c::GgMap {
+                pairs: component_to_configuration.as_ptr().cast::<c::GgKV>().cast_mut(),
+                len: component_to_configuration.len(),
+            },
+            root_component_versions_to_add: c::GgMap {
+                pairs: ptr::null_mut(),
+                len: 0,
+            },
+            root_components_to_remove: c::GgList {
+                items: ptr::null_mut(),
+                len: 0,
+            },
+            recipe_directory_path: c::GgBuffer {
+                data: ptr::null_mut(),
+                len: 0,
+            },
+            artifacts_directory_path: c::GgBuffer {
+                data: ptr::null_mut(),
+                len: 0,
+            },
+            failure_handling_policy: c::GgBuffer {
+                data: ptr::null_mut(),
+                len: 0,
+            },
+        };
+        Result::from(unsafe {
+            c::ggipc_create_local_deployment(&raw const args, &raw mut value)
+        })?;
+        Ok(unsafe {
+            str::from_utf8_unchecked(slice::from_raw_parts(value.data, value.len))
+        })
+    }
+
     /// Get component configuration value.
     ///
     /// Retrieves configuration for the specified key path. Pass empty slice for complete config.

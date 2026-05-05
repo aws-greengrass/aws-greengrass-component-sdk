@@ -10,6 +10,7 @@ ffat
 fileb
 flto
 fstrict
+ggdeploymentd
 ggipc
 greengrassv2
 idents
