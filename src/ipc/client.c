@@ -642,7 +642,7 @@ GgError ggipc_subscribe(
         if ((cond_ret != 0) && (cond_ret != EINTR)) {
             assert(cond_ret == ETIMEDOUT);
             GG_LOGW("Timed out waiting for a response.");
-            clear_stream_index(stream_index);
+            close_stream(stream_index);
             return GG_ERR_TIMEOUT;
         }
     }
