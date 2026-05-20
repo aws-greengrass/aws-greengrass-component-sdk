@@ -116,6 +116,41 @@ GgError ggipc_update_state(GgComponentState state);
 /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-deployments-components.html#ipc-operation-restartcomponent>
 GgError ggipc_restart_component(GgBuffer component_name);
 
+/// Arguments for ggipc_create_local_deployment.
+/// All fields are optional; zero-initialize the struct to omit all fields
+/// (zero-initialized maps/lists are valid empty maps/lists).
+typedef struct {
+    /// Map of component name → configuration merge map.
+    GgMap component_to_configuration;
+    /// Map of component name → version string to add as root components.
+    GgMap root_component_versions_to_add;
+    /// List of component name buffers to remove from root components.
+    GgList root_components_to_remove;
+    /// Path to a directory containing local recipe files.
+    GgBuffer recipe_directory_path;
+    /// Path to a directory containing local artifact files.
+    GgBuffer artifacts_directory_path;
+    /// Failure handling policy: "ROLLBACK" or "DO_NOTHING".
+    GgBuffer failure_handling_policy;
+} GgCreateLocalDeploymentArgs;
+
+/// Create a local deployment on the core device.
+/// Triggers a local deployment that can merge configuration into components,
+/// add/remove root components, and specify local
+/// recipe/artifact paths to overwrite the Greengrass recipe/artifact stores.
+///
+/// If `deployment_id` is not NULL, its `data` must point to a writable buffer
+/// of at least `deployment_id->len` bytes. On success, `deployment_id->len` is
+/// updated to the actual length of the returned deployment id string, which is
+/// written into the caller-provided buffer.
+///
+/// See:
+/// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-deployments-components.html#ipc-operation-createlocaldeployment>
+ACCESS(read_write, 2)
+GgError ggipc_create_local_deployment(
+    const GgCreateLocalDeploymentArgs *args, GgBuffer *deployment_id
+) NONNULL(1);
+
 /// Get component configuration value.
 /// Retrieves configuration for the specified key path.
 /// Pass empty list for complete config.

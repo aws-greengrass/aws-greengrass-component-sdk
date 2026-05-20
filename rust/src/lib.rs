@@ -7,6 +7,7 @@
 #![no_std]
 #![warn(missing_docs, clippy::pedantic, clippy::cargo)]
 #![allow(clippy::enum_glob_use)]
+#![allow(clippy::ref_as_ptr)]
 
 #[cfg(test)]
 extern crate std;

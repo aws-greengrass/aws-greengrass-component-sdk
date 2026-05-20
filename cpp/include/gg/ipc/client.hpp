@@ -22,6 +22,7 @@
 #include <utility>
 
 extern "C" {
+#include <gg/ipc/client.h>
 #include <gg/ipc/types.h>
 }
 
@@ -161,6 +162,18 @@ public:
     /// See:
     /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-deployments-components.html#ipc-operation-restartcomponent>
     std::error_code restart_component(std::string_view component_name) noexcept;
+
+    /// Create a local deployment on the core device.
+    /// Triggers a local deployment that can merge configuration into
+    /// components, add/remove root components, and specify local
+    /// recipe/artifact paths to overwrite the Greengrass recipe/artifact
+    /// stores. See:
+    /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-deployments-components.html#ipc-operation-createlocaldeployment>
+    std::error_code create_local_deployment(
+        const GgCreateLocalDeploymentArgs &args,
+        std::span<std::byte> deployment_id_mem = {},
+        std::string_view *deployment_id = nullptr
+    ) noexcept;
 
     /// Get component configuration value.
     /// Retrieves configuration for the specified key path.
