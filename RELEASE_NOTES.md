@@ -1,3 +1,9 @@
+# Release Notes v1.0.4
+
+## Bug Fixes
+
+- Notify Nucleus of cleaned up request when a request times out.
+
 # Release Notes v1.0.3
 
 ## Bug Fixes
