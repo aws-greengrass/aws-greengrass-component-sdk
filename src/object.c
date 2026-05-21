@@ -45,6 +45,10 @@ GgObject gg_obj_bool(bool value) {
 bool gg_obj_into_bool(GgObject boolean) {
     assert(gg_obj_type(boolean) == GG_TYPE_BOOLEAN);
     bool result;
+    static_assert(
+        sizeof(boolean._private) >= sizeof(result) + 1,
+        "Object must be able to hold bool and tag."
+    );
     memcpy(&result, boolean._private, sizeof(result));
     return result;
 }
@@ -63,6 +67,10 @@ GgObject gg_obj_i64(int64_t value) {
 int64_t gg_obj_into_i64(GgObject i64) {
     assert(gg_obj_type(i64) == GG_TYPE_I64);
     int64_t result;
+    static_assert(
+        sizeof(i64._private) >= sizeof(result) + 1,
+        "GgObject must be able to hold int64_t and tag."
+    );
     memcpy(&result, i64._private, sizeof(result));
     return result;
 }
@@ -81,6 +89,10 @@ GgObject gg_obj_f64(double value) {
 double gg_obj_into_f64(GgObject f64) {
     assert(gg_obj_type(f64) == GG_TYPE_F64);
     double result;
+    static_assert(
+        sizeof(f64._private) >= sizeof(result) + 1,
+        "GgObject must be able to hold double and tag."
+    );
     memcpy(&result, f64._private, sizeof(result));
     return result;
 }
