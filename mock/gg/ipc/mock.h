@@ -21,7 +21,7 @@
 // IWYU pragma: no_include <gg/eventstream/types.h>
 // IWYU pragma: end_exports
 
-typedef enum {
+typedef enum ENUM_EXTENSIBILITY(closed) {
     CLIENT_TO_SERVER = 0,
     SERVER_TO_CLIENT = 1
 } GgipcPacketDirection;

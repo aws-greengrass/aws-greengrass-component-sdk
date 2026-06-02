@@ -11,7 +11,7 @@
 //! GG error codes
 
 /// GG error codes, representing class of error.
-typedef enum NODISCARD GgError {
+typedef enum NODISCARD ENUM_EXTENSIBILITY(closed) GgError {
     /// Success
     GG_ERR_OK = 0,
     /// Generic failure
