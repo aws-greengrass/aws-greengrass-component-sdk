@@ -7,6 +7,7 @@
 
 //! Public types used by the SDK.
 
+#include <gg/attr.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -18,7 +19,7 @@ typedef struct {
 } GgObject;
 
 /// Type tag for `GgObject`.
-typedef enum {
+typedef enum ENUM_EXTENSIBILITY(closed) {
     GG_TYPE_NULL = 0,
     GG_TYPE_BOOLEAN,
     GG_TYPE_I64,
