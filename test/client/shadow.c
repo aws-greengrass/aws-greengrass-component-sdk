@@ -156,7 +156,7 @@ GG_TEST_DEFINE(list_named_shadows_okay) {
 
     GG_TEST_ASSERT_OK(gg_test_accept_client_handshake(5));
 
-    // First page: returns one shadow, no nextToken → no pagination
+    // First page: returns one shadow, no nextToken -- no pagination
     GG_TEST_ASSERT_OK(gg_test_expect_packet_sequence(
         gg_test_shadow_list_accepted_sequence(
             1, THING_NAME, NULL, results, TIMESTAMP, NULL

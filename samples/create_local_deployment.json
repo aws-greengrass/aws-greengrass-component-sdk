@@ -1,0 +1,45 @@
+{
+  "RecipeFormatVersion": "2020-01-25",
+  "ComponentName": "com.example.CreateLocalDeploymentC",
+  "ComponentVersion": "1.0.0",
+  "ComponentDescription": "A component that creates a local deployment to merge configuration.",
+  "ComponentPublisher": "Amazon",
+  "ComponentDependencies": {
+    "aws.greengrass.Cli": {
+      "VersionRequirement": ">=2.6.0",
+      "DependencyType": "HARD"
+    }
+  },
+  "ComponentConfiguration": {
+    "DefaultConfiguration": {
+      "accessControl": {
+        "aws.greengrass.Cli": {
+          "com.example.CreateLocalDeploymentC:cli:1": {
+            "policyDescription": "Allows access to create local deployments.",
+            "operations": ["aws.greengrass#CreateLocalDeployment"],
+            "resources": ["*"]
+          }
+        }
+      }
+    }
+  },
+  "Manifests": [
+    {
+      "Platform": {
+        "os": "linux",
+        "runtime": "*"
+      },
+      "Lifecycle": {
+        "run": "{artifacts:path}/sample_create_local_deployment"
+      },
+      "Artifacts": [
+        {
+          "URI": "s3://amzn-s3-demo-bucket/artifacts/com.example.CreateLocalDeploymentC/1.0.0/sample_create_local_deployment",
+          "Permission": {
+            "Execute": "OWNER"
+          }
+        }
+      ]
+    }
+  ]
+}

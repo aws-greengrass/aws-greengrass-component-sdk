@@ -18,4 +18,11 @@ typedef enum ENUM_EXTENSIBILITY(closed) {
     GG_COMPONENT_STATE_ERRORED
 } GgComponentState;
 
+/// Failure handling policy for creating local deployment
+typedef enum ENUM_EXTENSIBILITY(closed){
+    GG_FAILURE_HANDLING_POLICY_NONE,
+    GG_FAILURE_HANDLING_POLICY_ROLLBACK,
+    GG_FAILURE_HANDLING_POLICY_DO_NOTHING
+} GgFailureHandlingPolicy;
+
 #endif

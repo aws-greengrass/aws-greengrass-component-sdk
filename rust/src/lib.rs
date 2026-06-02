@@ -26,6 +26,7 @@ mod object;
 
 pub use error::{Error, Result};
 pub use ipc::{
-    ComponentState, Qos, Sdk, SubscribeToTopicPayload, Subscription,
+    ComponentState, CreateLocalDeploymentArgs, FailureHandlingPolicy, Qos, Sdk,
+    SubscribeToTopicPayload, Subscription,
 };
 pub use object::{Kv, List, Map, Object, UnpackedObject};

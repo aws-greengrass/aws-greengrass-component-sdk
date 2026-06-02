@@ -31,6 +31,7 @@ The following Greengrass v2 IPC operations are currently supported by this SDK:
 - [UpdateThingShadow](https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-shadows.html#ipc-operation-updatethingshadow)
 - [DeleteThingShadow](https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-shadows.html#ipc-operation-deletethingshadow)
 - [ListNamedShadowsForThing](https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-shadows.html#ipc-operation-listnamedshadowsforthing)
+- [CreateLocalDeployment](https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-deployments-components.html#ipc-operation-createlocaldeployment)
 
 ## Sample Greengrass Components
 
