@@ -165,6 +165,18 @@ GgipcPacket gg_test_restart_component_response_packet(
     int32_t stream_id, GgBuffer restart_status
 );
 
+GgipcPacket gg_test_create_local_deployment_request_packet(
+    int32_t stream_id, GgObject component_to_configuration
+);
+
+GgipcPacket gg_test_create_local_deployment_response_packet(
+    int32_t stream_id, GgBuffer deployment_id
+);
+
+GgipcPacket gg_test_create_local_deployment_versions_request_packet(
+    int32_t stream_id, GgObject root_component_versions_to_add
+);
+
 // Shadow operations
 
 GgipcPacket gg_test_shadow_update_request_packet(

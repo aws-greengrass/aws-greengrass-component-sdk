@@ -58,6 +58,48 @@ pub enum SubscribeToTopicPayload<'a> {
     Binary(&'a [u8]),
 }
 
+/// Arguments for [`Sdk::create_local_deployment`].
+///
+/// All fields default to empty/None. Use struct update syntax with
+/// `..Default::default()` to set only the fields you need.
+#[derive(Debug, Default)]
+pub struct CreateLocalDeploymentArgs<'a> {
+    /// Absolute path to a directory that contains component recipe files.
+    pub recipe_directory_path: Option<&'a str>,
+    /// Absolute path to a directory that contains artifact files to include
+    /// in the deployment.
+    pub artifacts_directory_path: Option<&'a str>,
+    /// Component versions to install on the core device. Map from component
+    /// names to version strings.
+    pub root_component_versions_to_add: &'a [Kv<'a>],
+    /// Components to uninstall from the core device. Each entry is the name
+    /// of a component.
+    pub root_components_to_remove: &'a [Object<'a>],
+    /// Configuration updates for each component. Map from component names to
+    /// configuration update objects containing MERGE and/or RESET keys.
+    pub component_to_configuration: &'a [Kv<'a>],
+    /// Runtime configuration for each component. Map from component names to
+    /// objects with optional posixUser, windowsUser, and systemResourceLimits.
+    pub component_to_run_with_info: &'a [Kv<'a>],
+    /// Thing group name to target with this deployment.
+    pub group_name: Option<&'a str>,
+    /// Failure handling policy.
+    pub failure_handling_policy: FailureHandlingPolicy,
+}
+
+/// Failure handling policy for local deployments.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[repr(u32)]
+pub enum FailureHandlingPolicy {
+    /// No policy specified (omitted from request).
+    #[default]
+    None = 0,
+    /// Roll back the deployment on failure.
+    Rollback = 1,
+    /// Do nothing on failure.
+    DoNothing = 2,
+}
+
 impl Sdk {
     /// Initialize the SDK.
     ///
@@ -367,6 +409,71 @@ impl Sdk {
     /// Returns error if restart fails.
     pub fn restart_component(&self, component_name: &str) -> Result<()> {
         Result::from(unsafe { c::ggipc_restart_component(component_name.into()) })
+    }
+
+    /// Create or update a local deployment using specified component recipes,
+    /// artifacts, and runtime arguments.
+    ///
+    /// On success, the returned `&str` is a view into `deployment_id_mem`
+    /// holding the deployment id returned by the nucleus.
+    ///
+    /// See: <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-deployments-components.html#ipc-operation-createlocaldeployment>
+    ///
+    /// # Errors
+    /// Returns error if the IPC call fails or the nucleus rejects the deployment.
+    pub fn create_local_deployment<'b>(
+        &self,
+        args: &CreateLocalDeploymentArgs<'_>,
+        deployment_id_mem: &'b mut [MaybeUninit<u8>],
+    ) -> Result<&'b str> {
+        let mut value = c::GgBuffer {
+            data: deployment_id_mem.as_mut_ptr().cast::<u8>(),
+            len: deployment_id_mem.len(),
+        };
+        let c_args = c::GgCreateLocalDeploymentArgs {
+            recipe_directory_path: args
+                .recipe_directory_path
+                .map_or(c::GgBuffer { data: ptr::null_mut(), len: 0 }, c::GgBuffer::from),
+            artifacts_directory_path: args
+                .artifacts_directory_path
+                .map_or(c::GgBuffer { data: ptr::null_mut(), len: 0 }, c::GgBuffer::from),
+            root_component_versions_to_add: c::GgMap {
+                pairs: args.root_component_versions_to_add.as_ptr().cast::<c::GgKV>().cast_mut(),
+                len: args.root_component_versions_to_add.len(),
+            },
+            root_components_to_remove: c::GgList {
+                items: args.root_components_to_remove.as_ptr().cast::<c::GgObject>().cast_mut(),
+                len: args.root_components_to_remove.len(),
+            },
+            component_to_configuration: c::GgMap {
+                pairs: args.component_to_configuration.as_ptr().cast::<c::GgKV>().cast_mut(),
+                len: args.component_to_configuration.len(),
+            },
+            component_to_run_with_info: c::GgMap {
+                pairs: args.component_to_run_with_info.as_ptr().cast::<c::GgKV>().cast_mut(),
+                len: args.component_to_run_with_info.len(),
+            },
+            group_name: args
+                .group_name
+                .map_or(c::GgBuffer { data: ptr::null_mut(), len: 0 }, c::GgBuffer::from),
+            failure_handling_policy: match args.failure_handling_policy {
+                FailureHandlingPolicy::None => {
+                    c::GgFailureHandlingPolicy::GG_FAILURE_HANDLING_POLICY_NONE
+                }
+                FailureHandlingPolicy::Rollback => {
+                    c::GgFailureHandlingPolicy::GG_FAILURE_HANDLING_POLICY_ROLLBACK
+                }
+                FailureHandlingPolicy::DoNothing => {
+                    c::GgFailureHandlingPolicy::GG_FAILURE_HANDLING_POLICY_DO_NOTHING
+                }
+            },
+        };
+        Result::from(unsafe {
+            c::ggipc_create_local_deployment(&raw const c_args, &raw mut value)
+        })?;
+        Ok(unsafe {
+            str::from_utf8_unchecked(slice::from_raw_parts(value.data, value.len))
+        })
     }
 
     /// Get component configuration value.

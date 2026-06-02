@@ -50,6 +50,33 @@ public:
 };
 
 using ComponentState = GgComponentState;
+using FailureHandlingPolicy = GgFailureHandlingPolicy;
+
+/// Arguments for Client::create_local_deployment.
+/// All fields default to empty. Set only the fields you need.
+struct CreateLocalDeploymentArgs {
+    /// Absolute path to a directory that contains component recipe files.
+    std::string_view recipe_directory_path;
+    /// Absolute path to a directory that contains artifact files to include
+    /// in the deployment.
+    std::string_view artifacts_directory_path;
+    /// Component versions to install on the core device. Map from component
+    /// names to version strings.
+    Map root_component_versions_to_add {};
+    /// Components to uninstall from the core device. Each entry is the name
+    /// of a component.
+    List root_components_to_remove {};
+    /// Configuration updates for each component. Map from component names to
+    /// configuration update objects containing MERGE and/or RESET keys.
+    Map component_to_configuration {};
+    /// Runtime configuration for each component. Map from component names to
+    /// objects with optional posixUser, windowsUser, and systemResourceLimits.
+    Map component_to_run_with_info {};
+    /// Thing group name to target with this deployment.
+    std::string_view group_name;
+    /// Failure handling policy.
+    FailureHandlingPolicy failure_handling_policy {};
+};
 
 class LocalTopicCallback {
 public:
@@ -161,6 +188,16 @@ public:
     /// See:
     /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-deployments-components.html#ipc-operation-restartcomponent>
     std::error_code restart_component(std::string_view component_name) noexcept;
+
+    /// Create or update a local deployment using specified component recipes,
+    /// artifacts, and runtime arguments.
+    /// See:
+    /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-deployments-components.html#ipc-operation-createlocaldeployment>
+    std::error_code create_local_deployment(
+        const CreateLocalDeploymentArgs &args,
+        std::span<std::byte> deployment_id_mem = {},
+        std::string_view *deployment_id = nullptr
+    ) noexcept;
 
     /// Get component configuration value.
     /// Retrieves configuration for the specified key path.

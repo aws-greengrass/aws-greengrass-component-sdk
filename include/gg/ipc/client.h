@@ -116,6 +116,46 @@ GgError ggipc_update_state(GgComponentState state);
 /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-deployments-components.html#ipc-operation-restartcomponent>
 GgError ggipc_restart_component(GgBuffer component_name);
 
+/// Arguments for ggipc_create_local_deployment.
+/// Leave fields empty (zero-initialized) to not pass those arguments.
+typedef struct {
+    /// Absolute path to a directory that contains component recipe files.
+    GgBuffer recipe_directory_path;
+    /// Absolute path to a directory that contains artifact files to include
+    /// in the deployment.
+    GgBuffer artifacts_directory_path;
+    /// Component versions to install on the core device. Map from component
+    /// names to version strings.
+    GgMap root_component_versions_to_add;
+    /// Components to uninstall from the core device. Each entry is the name
+    /// of a component.
+    GgList root_components_to_remove;
+    /// Configuration updates for each component. Map from component names to
+    /// configuration update objects containing MERGE and/or RESET keys.
+    GgMap component_to_configuration;
+    /// Runtime configuration for each component. Map from component names to
+    /// objects with optional posixUser, windowsUser, and systemResourceLimits.
+    GgMap component_to_run_with_info;
+    /// Thing group name to target with this deployment. If empty, defaults to
+    /// LOCAL_DEPLOYMENT.
+    GgBuffer group_name;
+    /// Failure handling policy.
+    GgFailureHandlingPolicy failure_handling_policy;
+} GgCreateLocalDeploymentArgs;
+
+/// Create or update a local deployment using specified component recipes,
+/// artifacts, and runtime arguments.
+/// If `deployment_id` is not NULL, its `data` must point to a writable buffer
+/// of at least `deployment_id->len` bytes. On success, `deployment_id->len` is
+/// updated to the actual length of the returned deployment id string, which is
+/// written into the caller-provided buffer.
+/// See:
+/// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-local-deployments-components.html#ipc-operation-createlocaldeployment>
+ACCESS(read_write, 2)
+GgError ggipc_create_local_deployment(
+    const GgCreateLocalDeploymentArgs *args, GgBuffer *deployment_id
+) NONNULL(1);
+
 /// Get component configuration value.
 /// Retrieves configuration for the specified key path.
 /// Pass empty list for complete config.

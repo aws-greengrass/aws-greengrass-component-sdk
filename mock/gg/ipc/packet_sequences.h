@@ -84,6 +84,26 @@ GgipcPacketSequence gg_test_restart_component_error_sequence(
     int32_t stream_id, GgBuffer component_name
 );
 
+GgipcPacketSequence gg_test_create_local_deployment_accepted_sequence(
+    int32_t stream_id,
+    GgObject component_to_configuration,
+    GgBuffer deployment_id
+);
+
+GgipcPacketSequence gg_test_create_local_deployment_error_sequence(
+    int32_t stream_id, GgObject component_to_configuration
+);
+
+GgipcPacketSequence gg_test_create_local_deployment_versions_accepted_sequence(
+    int32_t stream_id,
+    GgObject root_component_versions_to_add,
+    GgBuffer deployment_id
+);
+
+GgipcPacketSequence gg_test_create_local_deployment_payload_accepted_sequence(
+    int32_t stream_id, GgMap payload, GgBuffer deployment_id
+);
+
 // Shadow sequences
 
 GgipcPacketSequence gg_test_shadow_update_accepted_sequence(
