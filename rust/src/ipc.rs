@@ -311,7 +311,11 @@ impl Sdk {
         qos: Qos,
     ) -> Result<()> {
         Result::from(unsafe {
-            c::ggipc_publish_to_iot_core(topic.into(), payload.into(), qos as u8)
+            c::ggipc_publish_to_iot_core(
+                topic.into(),
+                payload.into(),
+                qos as u8,
+            )
         })
     }
 
@@ -408,7 +412,9 @@ impl Sdk {
     /// # Errors
     /// Returns error if restart fails.
     pub fn restart_component(&self, component_name: &str) -> Result<()> {
-        Result::from(unsafe { c::ggipc_restart_component(component_name.into()) })
+        Result::from(unsafe {
+            c::ggipc_restart_component(component_name.into())
+        })
     }
 
     /// Create or update a local deployment using specified component recipes,
@@ -472,7 +478,9 @@ impl Sdk {
             c::ggipc_create_local_deployment(&raw const c_args, &raw mut value)
         })?;
         Ok(unsafe {
-            str::from_utf8_unchecked(slice::from_raw_parts(value.data, value.len))
+            str::from_utf8_unchecked(slice::from_raw_parts(
+                value.data, value.len,
+            ))
         })
     }
 
@@ -753,14 +761,11 @@ impl Sdk {
                 thing_name.into(),
                 shadow_buf.as_ref().map_or(ptr::null(), ptr::from_ref),
                 payload.into(),
-                response
-                    .as_mut()
-                    .map_or(ptr::null_mut(), ptr::from_mut),
+                response.as_mut().map_or(ptr::null_mut(), ptr::from_mut),
             )
         })?;
 
-        Ok(response
-            .map(|r| unsafe { slice::from_raw_parts(r.data, r.len) }))
+        Ok(response.map(|r| unsafe { slice::from_raw_parts(r.data, r.len) }))
     }
 
     /// Delete the shadow for a thing.
@@ -1045,7 +1050,7 @@ fn key_path_to_buf_list(
         return Err(Error::Range);
     }
     for (i, k) in key_path.iter().enumerate() {
-      bufs[i].write((*k).into());
+        bufs[i].write((*k).into());
     }
     Ok(c::GgBufList {
         bufs: bufs.as_mut_ptr().cast(),
@@ -1055,7 +1060,7 @@ fn key_path_to_buf_list(
 
 #[cfg(test)]
 mod test {
-    use std::sync::{Condvar, Mutex};
+    use std::sync::{Condvar, Mutex, PoisonError};
 
     use super::{Qos, Sdk};
     use crate::c;
@@ -1088,15 +1093,16 @@ mod test {
             c::gg_test_close();
 
             let mut status = 0;
-            libc::waitpid(pid, &mut status, 0);
+            libc::waitpid(pid, &raw mut status, 0);
 
-            assert_eq!(libc::WIFEXITED(status), true);
+            assert!(libc::WIFEXITED(status));
             assert_eq!(libc::WEXITSTATUS(status), 0);
         };
 
         Ok(())
     }
 
+    #[expect(clippy::large_types_passed_by_value)]
     pub(crate) fn run_ipc_sequence_test<F: FnOnce() -> Result<()>>(
         packet_sequence: c::GgipcPacketSequence,
         test_body: F,
@@ -1124,9 +1130,9 @@ mod test {
             c::gg_test_close();
 
             let mut status = 0;
-            libc::waitpid(pid, &mut status, 0);
+            libc::waitpid(pid, &raw mut status, 0);
 
-            assert_eq!(libc::WIFEXITED(status), true);
+            assert!(libc::WIFEXITED(status));
             assert_eq!(libc::WEXITSTATUS(status), 0);
         };
 
@@ -1153,7 +1159,7 @@ mod test {
 
     #[test]
     fn test_connect_okay() -> Result<()> {
-        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(PoisonError::into_inner);
         run_ipc_handshake_test(|| {
             let sdk = Sdk::init();
             sdk.connect()
@@ -1162,7 +1168,7 @@ mod test {
 
     #[test]
     fn test_connect_with_token_okay() -> Result<()> {
-        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(PoisonError::into_inner);
         run_ipc_handshake_test(|| unsafe {
             // Unset env vars to force explicit token usage
             libc::unsetenv(c"SVCUID".as_ptr());
@@ -1180,7 +1186,7 @@ mod test {
 
     #[test]
     fn test_publish_to_iot_core_okay() -> Result<()> {
-        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(PoisonError::into_inner);
         let topic = "my/topic";
         let payload_base64 = "SGVsbG8gd29ybGQh";
         let qos = "0";
@@ -1205,13 +1211,13 @@ mod test {
 
     #[test]
     fn test_publish_to_iot_core_bad_alloc() -> Result<()> {
-        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(PoisonError::into_inner);
         run_ipc_handshake_test(|| {
+            static PAYLOAD: [u8; 0x20000] = [0u8; _];
             let sdk = Sdk::init();
             sdk.connect()?;
-            let payload = [0u8; 0x20000];
             assert_eq!(
-                sdk.publish_to_iot_core("my/topic", &payload, Qos::AtMostOnce),
+                sdk.publish_to_iot_core("my/topic", &PAYLOAD, Qos::AtMostOnce),
                 Err(Error::Nomem),
             );
             Ok(())
@@ -1220,7 +1226,7 @@ mod test {
 
     #[test]
     fn test_publish_to_iot_core_rejected() -> Result<()> {
-        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(PoisonError::into_inner);
         let topic = "my/topic";
         let payload_base64 = "SGVsbG8gd29ybGQh";
         let qos = "0";
@@ -1252,7 +1258,7 @@ mod test {
 
     #[test]
     fn test_get_thing_shadow_okay() -> Result<()> {
-        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(PoisonError::into_inner);
         let thing_name = "MyThing";
         let shadow_name = "myShadow";
         let payload = "hello";
@@ -1278,7 +1284,7 @@ mod test {
 
     #[test]
     fn test_get_thing_shadow_rejected() -> Result<()> {
-        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(PoisonError::into_inner);
         let thing_name = "MyThing";
         let shadow_name = "myShadow";
         let seq = unsafe {
@@ -1292,16 +1298,17 @@ mod test {
             let sdk = Sdk::init();
             sdk.connect()?;
             let mut buf = [std::mem::MaybeUninit::uninit(); 64];
-            assert!(sdk
-                .get_thing_shadow(thing_name, Some(shadow_name), &mut buf)
-                .is_err());
+            assert!(
+                sdk.get_thing_shadow(thing_name, Some(shadow_name), &mut buf)
+                    .is_err()
+            );
             Ok(())
         })
     }
 
     #[test]
     fn test_update_thing_shadow_okay() -> Result<()> {
-        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(PoisonError::into_inner);
         let thing_name = "MyThing";
         let shadow_name = "myShadow";
         let payload = b"hello";
@@ -1318,14 +1325,19 @@ mod test {
         run_ipc_sequence_test(seq, || {
             let sdk = Sdk::init();
             sdk.connect()?;
-            sdk.update_thing_shadow(thing_name, Some(shadow_name), payload, None)?;
+            sdk.update_thing_shadow(
+                thing_name,
+                Some(shadow_name),
+                payload,
+                None,
+            )?;
             Ok(())
         })
     }
 
     #[test]
     fn test_update_thing_shadow_rejected() -> Result<()> {
-        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(PoisonError::into_inner);
         let thing_name = "MyThing";
         let shadow_name = "myShadow";
         let payload = b"hello";
@@ -1341,16 +1353,22 @@ mod test {
         run_ipc_sequence_test(seq, || {
             let sdk = Sdk::init();
             sdk.connect()?;
-            assert!(sdk
-                .update_thing_shadow(thing_name, Some(shadow_name), payload, None)
-                .is_err());
+            assert!(
+                sdk.update_thing_shadow(
+                    thing_name,
+                    Some(shadow_name),
+                    payload,
+                    None
+                )
+                .is_err()
+            );
             Ok(())
         })
     }
 
     #[test]
     fn test_delete_thing_shadow_okay() -> Result<()> {
-        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(PoisonError::into_inner);
         let thing_name = "MyThing";
         let shadow_name = "myShadow";
         let seq = unsafe {
@@ -1371,7 +1389,7 @@ mod test {
 
     #[test]
     fn test_delete_thing_shadow_rejected() -> Result<()> {
-        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(PoisonError::into_inner);
         let thing_name = "MyThing";
         let shadow_name = "myShadow";
         let seq = unsafe {
@@ -1384,9 +1402,10 @@ mod test {
         run_ipc_sequence_test(seq, || {
             let sdk = Sdk::init();
             sdk.connect()?;
-            assert!(sdk
-                .delete_thing_shadow(thing_name, Some(shadow_name))
-                .is_err());
+            assert!(
+                sdk.delete_thing_shadow(thing_name, Some(shadow_name))
+                    .is_err()
+            );
             Ok(())
         })
     }
@@ -1395,9 +1414,9 @@ mod test {
     fn test_list_named_shadows_okay() -> Result<()> {
         let thing_name = "MyThing";
         let shadow_name = "myShadow";
-        let timestamp: f64 = 1773436831.0;
+        let timestamp: f64 = 1_773_436_831.0;
 
-        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(PoisonError::into_inner);
         unsafe {
             Result::from(c::gg_test_setup_ipc(
                 c"/tmp/gg-test".as_ptr(),
@@ -1426,7 +1445,7 @@ mod test {
 
             let mut result_item = c::gg_obj_buf(shadow_name.into());
             let results = c::GgList {
-                items: &mut result_item,
+                items: &raw mut result_item,
                 len: 1,
             };
 
@@ -1449,7 +1468,7 @@ mod test {
             c::gg_test_close();
 
             let mut status = 0;
-            libc::waitpid(pid, &mut status, 0);
+            libc::waitpid(pid, &raw mut status, 0);
             assert!(libc::WIFEXITED(status));
             assert_eq!(libc::WEXITSTATUS(status), 0);
         }
@@ -1459,7 +1478,7 @@ mod test {
 
     #[test]
     fn test_list_named_shadows_rejected() -> Result<()> {
-        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(PoisonError::into_inner);
         let thing_name = "MyThing";
         let seq = unsafe {
             c::gg_test_shadow_list_error_sequence(1, thing_name.into())
@@ -1467,9 +1486,10 @@ mod test {
         run_ipc_sequence_test(seq, || {
             let sdk = Sdk::init();
             sdk.connect()?;
-            assert!(sdk
-                .list_named_shadows_for_thing(thing_name, &mut |_: &str| {})
-                .is_err());
+            assert!(
+                sdk.list_named_shadows_for_thing(thing_name, &mut |_: &str| {})
+                    .is_err()
+            );
             Ok(())
         })
     }
@@ -1477,9 +1497,9 @@ mod test {
     #[test]
     fn test_list_named_shadows_paginated_okay() -> Result<()> {
         let thing_name = "MyThing";
-        let timestamp: f64 = 1773436831.0;
+        let timestamp: f64 = 1_773_436_831.0;
 
-        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(PoisonError::into_inner);
         unsafe {
             Result::from(c::gg_test_setup_ipc(
                 c"/tmp/gg-test".as_ptr(),
@@ -1512,13 +1532,13 @@ mod test {
 
             let mut page1_item = c::gg_obj_buf("shadow1".into());
             let page1 = c::GgList {
-                items: &mut page1_item,
+                items: &raw mut page1_item,
                 len: 1,
             };
 
             let mut page2_item = c::gg_obj_buf("shadow2".into());
             let page2 = c::GgList {
-                items: &mut page2_item,
+                items: &raw mut page2_item,
                 len: 1,
             };
 
@@ -1536,7 +1556,7 @@ mod test {
                     core::ptr::null_mut(),
                     page1,
                     timestamp,
-                    &mut next_token1,
+                    &raw mut next_token1,
                 ),
                 5,
             ))?;
@@ -1545,10 +1565,10 @@ mod test {
                 c::gg_test_shadow_list_accepted_sequence(
                     2,
                     thing_name.into(),
-                    &mut next_token1,
+                    &raw mut next_token1,
                     page2,
                     timestamp,
-                    &mut next_token2,
+                    &raw mut next_token2,
                 ),
                 5,
             ))?;
@@ -1557,7 +1577,7 @@ mod test {
                 c::gg_test_shadow_list_accepted_sequence(
                     3,
                     thing_name.into(),
-                    &mut next_token2,
+                    &raw mut next_token2,
                     empty,
                     timestamp,
                     core::ptr::null_mut(),
@@ -1570,7 +1590,7 @@ mod test {
             c::gg_test_close();
 
             let mut status = 0;
-            libc::waitpid(pid, &mut status, 0);
+            libc::waitpid(pid, &raw mut status, 0);
             assert!(libc::WIFEXITED(status));
             assert_eq!(libc::WEXITSTATUS(status), 0);
         }
@@ -1580,7 +1600,7 @@ mod test {
 
     #[test]
     fn test_subscribe_to_iot_core_okay() -> Result<()> {
-        let _guard = TEST_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = TEST_MUTEX.lock().unwrap_or_else(PoisonError::into_inner);
         let topic = "my/topic";
         let payload_base64 = "SGVsbG8gd29ybGQh";
         let qos = "0";
