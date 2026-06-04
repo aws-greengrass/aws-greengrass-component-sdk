@@ -305,9 +305,12 @@
                 cargoLock.lockFile = ./rust/Cargo.lock;
                 cargoRoot = "rust";
                 buildAndTestSubdir = "rust";
+                cargoBuildFlags = [ "--all-targets" ];
+                cargoTestFlags = [ "--all-targets" ];
                 postCheck = ''
                   pushd rust
-                  cargo clippy --profile $cargoCheckType -- --deny warnings
+                  cargo clippy --all-targets --profile $cargoCheckType \
+                    -- --deny warnings
                   popd
                 '';
               };
