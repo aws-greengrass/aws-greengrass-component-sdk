@@ -22,6 +22,9 @@ include = [
 [lib]
 name = "gg_sdk"
 
+[features]
+private_module = []
+
 [build-dependencies]
 bindgen = "0.72.1"
 cc = "1"

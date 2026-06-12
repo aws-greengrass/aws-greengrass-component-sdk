@@ -5,6 +5,8 @@
 //! Build script for gg-sdk.
 
 use std::env;
+use std::fs::File;
+use std::io::Write;
 use std::path::PathBuf;
 
 fn main() {
@@ -77,6 +79,23 @@ fn main() {
         }
     }
 
+    let log_level = std::env::var("GG_LOG_LEVEL").unwrap_or_else(|_| {
+        String::from({
+            if cfg!(debug_assertions) {
+                "GG_LOG_DEBUG"
+            } else {
+                "GG_LOG_INFO"
+            }
+        })
+    });
+
+    let config_code = format!(
+        r#"
+pub const LOG_LEVEL: &str = "{}";
+"#,
+        log_level
+    );
+
     let mut build = cc::Build::new();
     for file in &src_files {
         build.flag(format!("-frandom-seed={}", file.display()));
@@ -98,7 +117,7 @@ fn main() {
         .flag_if_supported("-fstrict-flex-arrays=3")
         .define("_GNU_SOURCE", None)
         .define("GG_MODULE", "\"gg-sdk\"")
-        .define("GG_LOG_LEVEL", "GG_LOG_DEBUG");
+        .define("GG_LOG_LEVEL", log_level.as_str());
 
     if env::var("OPT_LEVEL").unwrap() == "z" {
         build.flag_if_supported("-Oz");
@@ -110,6 +129,11 @@ fn main() {
     }
 
     build.compile("gg-sdk");
+
+    File::create(PathBuf::from(env::var("OUT_DIR").unwrap()).join("config.rs"))
+        .unwrap()
+        .write_all(config_code.as_bytes())
+        .unwrap();
 
     println!("cargo:rerun-if-changed=wrapper.h");
     println!("cargo:rerun-if-changed={}", c_src_dir.display());
