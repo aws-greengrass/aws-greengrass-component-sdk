@@ -30,3 +30,6 @@ pub use ipc::{
     SubscribeToTopicPayload, Subscription,
 };
 pub use object::{Kv, List, Map, Object, UnpackedObject};
+
+#[cfg(feature = "private_module")]
+pub mod private;
