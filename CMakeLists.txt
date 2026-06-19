@@ -176,6 +176,8 @@ if(PROJECT_IS_TOP_LEVEL)
     $<$<COMPILE_LANGUAGE:C>:-Werror=incompatible-pointer-types>
     $<$<COMPILE_LANGUAGE:C>:-Werror=int-conversion>)
 
+  add_compile_definitions($<$<NOT:$<CONFIG:Debug>>:NDEBUG>)
+
   add_link_options(
     LINKER:-z,relro,-z,now,-z,noexecstack,-z,nodlopen LINKER:--as-needed
     LINKER:--no-copy-dt-needed-entries

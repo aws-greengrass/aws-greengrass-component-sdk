@@ -35,6 +35,7 @@ __attribute__((constructor)) static void ignore_sigpipe(void) {
     struct sigaction sa;
     int ret = sigaction(SIGPIPE, NULL, &sa);
     assert(ret == 0);
+    (void) ret;
     if (sa.sa_handler == SIG_DFL) {
         sa = (struct sigaction) {
             .sa_handler = empty_sig_handler,
