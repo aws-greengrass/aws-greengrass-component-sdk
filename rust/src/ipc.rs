@@ -5,7 +5,7 @@
 use core::{
     ffi,
     marker::PhantomData,
-    mem::MaybeUninit,
+    mem::{ManuallyDrop, MaybeUninit},
     ptr, result, slice, str,
     sync::atomic::{AtomicBool, Ordering},
 };
@@ -848,7 +848,7 @@ impl Sdk {
         operation: &str,
         service_model_type: &str,
         params: &[Kv<'a>],
-        mut callback: F,
+        callback: F,
     ) -> Result<()> {
         extern "C" fn result_trampoline<
             'b,
@@ -892,6 +892,7 @@ impl Sdk {
             .into()
         }
 
+        let mut callback = ManuallyDrop::new(callback);
         Result::from(unsafe {
             c::ggipc_call(
                 operation.into(),
@@ -899,7 +900,7 @@ impl Sdk {
                 params.into(),
                 Some(result_trampoline::<F>),
                 Some(error_trampoline::<F>),
-                (&raw mut callback).cast::<ffi::c_void>(),
+                (&raw mut *callback).cast::<ffi::c_void>(),
             )
         })
     }
@@ -921,7 +922,7 @@ impl Sdk {
         operation: &str,
         service_model_type: &str,
         params: &[Kv<'a>],
-        mut response_callback: F,
+        response_callback: F,
         sub_callback: &'c G,
         aux_ctx: usize,
     ) -> Result<Subscription<'c, G>> {
@@ -991,6 +992,7 @@ impl Sdk {
             cb(aux, smt, map).into()
         }
 
+        let mut response_callback = ManuallyDrop::new(response_callback);
         let mut handle = c::GgIpcSubscriptionHandle { val: 0 };
         let ctx = sub_callback as *const G;
 
@@ -1001,7 +1003,7 @@ impl Sdk {
                 params.into(),
                 Some(result_trampoline::<F>),
                 Some(error_trampoline::<F>),
-                (&raw mut response_callback).cast::<ffi::c_void>(),
+                (&raw mut *response_callback).cast::<ffi::c_void>(),
                 Some(sub_trampoline::<'b, G>),
                 ctx.cast::<ffi::c_void>().cast_mut(),
                 aux_ctx as *mut ffi::c_void,
