@@ -71,6 +71,10 @@ static GgError subscribe_to_configuration_update_resp_handler(
         GG_LOGE("Key path must contain only buffers.");
         return GG_ERR_INVALID;
     }
+    if (key_path.len > GG_MAX_OBJECT_DEPTH - 1) {
+        GG_LOGE("Key path too long.");
+        return GG_ERR_INVALID;
+    }
 
     callback(aux_ctx, component_name, key_path, handle);
 
