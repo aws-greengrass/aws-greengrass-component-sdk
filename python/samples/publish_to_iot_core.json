@@ -1,0 +1,39 @@
+{
+  "RecipeFormatVersion": "2020-01-25",
+  "ComponentName": "com.example.IoTCorePublisherPython",
+  "ComponentVersion": "1.0.0",
+  "ComponentDescription": "A component that publishes MQTT messages to IoT Core.",
+  "ComponentPublisher": "Amazon",
+  "ComponentConfiguration": {
+    "DefaultConfiguration": {
+      "accessControl": {
+        "aws.greengrass.ipc.mqttproxy": {
+          "com.example.IoTCorePublisherPython:mqttproxy:1": {
+            "policyDescription": "Allows access to publish to all topics.",
+            "operations": ["aws.greengrass#PublishToIoTCore"],
+            "resources": ["*"]
+          }
+        }
+      }
+    }
+  },
+  "Manifests": [
+    {
+      "Platform": {
+        "os": "linux",
+        "runtime": "*"
+      },
+      "Lifecycle": {
+        "run": "python3 -u {artifacts:path}/publish_to_iot_core.py"
+      },
+      "Artifacts": [
+        {
+          "URI": "s3://amzn-s3-demo-bucket/artifacts/com.example.IoTCorePublisherPython/1.0.0/publish_to_iot_core.py",
+          "Permission": {
+            "Read": "ALL"
+          }
+        }
+      ]
+    }
+  ]
+}
