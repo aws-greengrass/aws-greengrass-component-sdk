@@ -80,4 +80,24 @@ static inline void gg_log_disabled(const char *format, ...) {
 #define GG_LOGT(...) gg_log_disabled(__VA_ARGS__)
 #endif
 
+#ifdef GG_TRACE_ENABLED
+
+/// Set the trace context for the current thread.
+void gg_log_set_trace(
+    uint16_t trace_id, uint16_t span_id, uint16_t parent_span_id
+);
+
+/// Clear the trace context for the current thread.
+void gg_log_clear_trace(void);
+
+/// Return the current thread's trace_id (0 = no trace active).
+uint16_t gg_log_current_trace_id(void);
+
+/// Copy the current thread's trace context into the provided pointers.
+void gg_log_get_trace(
+    uint16_t *trace_id, uint16_t *span_id, uint16_t *parent_span_id
+);
+
+#endif // GG_TRACE_ENABLED
+
 #endif
