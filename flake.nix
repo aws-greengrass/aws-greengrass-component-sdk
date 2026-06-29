@@ -117,14 +117,15 @@
           };
 
         pname = "gg-sdk";
-        package = { stdenv, cmake, ninja, static ? true }:
+        package = { stdenv, cmake, ninja, static ? true, trace ? false }:
           stdenv.mkDerivation {
             name = "gg-sdk";
             src = filteredSrc;
             nativeBuildInputs = [ cmake ninja ];
             cmakeBuildType = "MinSizeRel";
             cmakeFlags = [ "-DENABLE_WERROR=1" ]
-              ++ lib.optional (!static) "-DBUILD_SHARED_LIBS=1";
+              ++ lib.optional (!static) "-DBUILD_SHARED_LIBS=1"
+              ++ lib.optional trace "-DGG_LOG_TRACE=ON";
             hardeningDisable = [ "all" ];
             dontStrip = true;
           };
@@ -180,7 +181,7 @@
           in
           {
             build-clang = pkgs: pkgs.gg-sdk.override
-              { stdenv = llvmStdenv pkgs; };
+              { stdenv = llvmStdenv pkgs; trace = true; };
 
             build-shared = shared-lib;
 
@@ -239,7 +240,7 @@
                 src = filteredTestSrc;
                 nativeBuildInputs = [ git cmake ninja ];
                 cmakeBuildType = "MinSizeRel";
-                cmakeFlags = (fetchContentFlags pkgs) ++ [ "-DBUILD_TESTING=1" "-DBUILD_SAMPLES=0" ];
+                cmakeFlags = (fetchContentFlags pkgs) ++ [ "-DBUILD_TESTING=1" "-DBUILD_SAMPLES=0" "-DGG_LOG_TRACE=ON" ];
                 postBuild = ''
                   ctest --verbose
                 '';

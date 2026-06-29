@@ -43,6 +43,14 @@ __attribute__((constructor)) static void configure_logging(void) {
     }
 }
 
+#ifdef GG_TRACE_ENABLED
+
+static _Thread_local uint16_t tls_trace_id;
+static _Thread_local uint16_t tls_span_id;
+static _Thread_local uint16_t tls_parent_span_id;
+
+#endif // GG_TRACE_ENABLED
+
 void gg_log(
     uint32_t level,
     const char *file,
@@ -101,7 +109,43 @@ void gg_log(
     {
         GG_MTX_SCOPE_GUARD(&log_mutex);
 
+#ifdef GG_TRACE_ENABLED
+        if (tls_trace_id != 0U) {
+            char parent_buf[5];
+            if (tls_parent_span_id == 0U) {
+                parent_buf[0] = '-';
+                parent_buf[1] = '-';
+                parent_buf[2] = '-';
+                parent_buf[3] = '-';
+                parent_buf[4] = '\0';
+            } else {
+                snprintf(
+                    parent_buf,
+                    sizeof(parent_buf),
+                    "%04X",
+                    (unsigned) tls_parent_span_id
+                );
+            }
+            fprintf(
+                stderr,
+                "%s%c[%s] [%04X:%04X:%s:%s:%d] ",
+                prefix,
+                level_c,
+                tag,
+                (unsigned) tls_trace_id,
+                (unsigned) tls_span_id,
+                parent_buf,
+                file,
+                line
+            );
+        } else {
+            fprintf(
+                stderr, "%s%c[%s] %s:%d: ", prefix, level_c, tag, file, line
+            );
+        }
+#else
         fprintf(stderr, "%s%c[%s] %s:%d: ", prefix, level_c, tag, file, line);
+#endif
 
         va_list args;
         va_start(args, format);
@@ -115,3 +159,33 @@ void gg_log(
 
     errno = saved_errno;
 }
+
+#ifdef GG_TRACE_ENABLED
+
+void gg_log_set_trace(
+    uint16_t trace_id, uint16_t span_id, uint16_t parent_span_id
+) {
+    tls_trace_id = trace_id;
+    tls_span_id = span_id;
+    tls_parent_span_id = parent_span_id;
+}
+
+void gg_log_clear_trace(void) {
+    tls_trace_id = 0;
+    tls_span_id = 0;
+    tls_parent_span_id = 0;
+}
+
+uint16_t gg_log_current_trace_id(void) {
+    return tls_trace_id;
+}
+
+void gg_log_get_trace(
+    uint16_t *trace_id, uint16_t *span_id, uint16_t *parent_span_id
+) {
+    *trace_id = tls_trace_id;
+    *span_id = tls_span_id;
+    *parent_span_id = tls_parent_span_id;
+}
+
+#endif // GG_TRACE_ENABLED

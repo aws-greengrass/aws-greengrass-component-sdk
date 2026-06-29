@@ -226,9 +226,15 @@ target_include_directories(gg-sdk SYSTEM INTERFACE include)
 
 target_compile_definitions(gg-sdk PRIVATE "GG_MODULE=(\"gg-sdk\")")
 
+option(GG_LOG_TRACE "Enable request tracing in log output" OFF)
+
 string(TOUPPER "${GG_LOG_LEVEL}" log_level)
 set(choose_level "$<IF:$<BOOL:${log_level}>,${log_level},DEBUG>")
 target_compile_definitions(gg-sdk PUBLIC GG_LOG_LEVEL=GG_LOG_${choose_level})
+
+if(GG_LOG_TRACE)
+  target_compile_definitions(gg-sdk PUBLIC GG_TRACE_ENABLED)
+endif()
 
 if(BUILD_TESTING)
   include(unity-test-suite.cmake)
@@ -260,6 +266,12 @@ if(PROJECT_IS_TOP_LEVEL)
         continue()
       endif()
       get_filename_component(test_name ${test_dir} NAME_WLE)
+      # The trace test is a standalone test (its own main(), needs pthread and
+      # _GNU_SOURCE) and only exists when tracing is enabled. It is built by the
+      # dedicated GG_LOG_TRACE-gated trace_test target below, so skip it here.
+      if(test_name STREQUAL "trace")
+        continue()
+      endif()
       file(GLOB_RECURSE TEST_SRCS CONFIGURE_DEPENDS ${test_dir}/*.c)
       if(NOT "${test_dir}/main.c" IN_LIST TEST_SRCS)
         list(APPEND TEST_SRCS test/main_ipc_overrides.c)
@@ -301,4 +313,17 @@ endif()
 
 if(BUILD_CPP)
   add_subdirectory(cpp)
+endif()
+
+if(GG_LOG_TRACE
+   AND BUILD_TESTING
+   AND PROJECT_IS_TOP_LEVEL)
+  include(CTest)
+  add_executable(trace_test test/trace/main.c)
+  target_include_directories(trace_test PRIVATE include priv_include)
+  target_link_libraries(trace_test PRIVATE gg-sdk)
+  target_compile_definitions(trace_test PRIVATE "GG_MODULE=(\"trace_test\")")
+  target_compile_definitions(trace_test PRIVATE _GNU_SOURCE)
+  target_link_libraries(trace_test PRIVATE pthread)
+  add_test(NAME trace_test COMMAND trace_test)
 endif()
