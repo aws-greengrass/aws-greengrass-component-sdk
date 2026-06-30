@@ -43,13 +43,13 @@ __attribute__((constructor)) static void configure_logging(void) {
     }
 }
 
-#ifdef GG_TRACE_ENABLED
+#ifdef GG_LOG_TRAIL_ENABLED
 
 static _Thread_local uint16_t tls_trace_id;
 static _Thread_local uint16_t tls_span_id;
 static _Thread_local uint16_t tls_parent_span_id;
 
-#endif // GG_TRACE_ENABLED
+#endif // GG_LOG_TRAIL_ENABLED
 
 void gg_log(
     uint32_t level,
@@ -109,7 +109,7 @@ void gg_log(
     {
         GG_MTX_SCOPE_GUARD(&log_mutex);
 
-#ifdef GG_TRACE_ENABLED
+#ifdef GG_LOG_TRAIL_ENABLED
         if (tls_trace_id != 0U) {
             char parent_buf[5];
             if (tls_parent_span_id == 0U) {
@@ -160,9 +160,9 @@ void gg_log(
     errno = saved_errno;
 }
 
-#ifdef GG_TRACE_ENABLED
+#ifdef GG_LOG_TRAIL_ENABLED
 
-void gg_log_set_trace(
+void gg_log_set_trail(
     uint16_t trace_id, uint16_t span_id, uint16_t parent_span_id
 ) {
     tls_trace_id = trace_id;
@@ -170,17 +170,17 @@ void gg_log_set_trace(
     tls_parent_span_id = parent_span_id;
 }
 
-void gg_log_clear_trace(void) {
+void gg_log_clear_trail(void) {
     tls_trace_id = 0;
     tls_span_id = 0;
     tls_parent_span_id = 0;
 }
 
-uint16_t gg_log_current_trace_id(void) {
+uint16_t gg_log_current_trail_id(void) {
     return tls_trace_id;
 }
 
-void gg_log_get_trace(
+void gg_log_get_trail(
     uint16_t *trace_id, uint16_t *span_id, uint16_t *parent_span_id
 ) {
     *trace_id = tls_trace_id;
@@ -188,4 +188,4 @@ void gg_log_get_trace(
     *parent_span_id = tls_parent_span_id;
 }
 
-#endif // GG_TRACE_ENABLED
+#endif // GG_LOG_TRAIL_ENABLED

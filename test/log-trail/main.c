@@ -9,8 +9,8 @@
 #include <gg/eventstream/encode.h>
 #include <gg/eventstream/types.h>
 #include <gg/io.h>
+#include <gg/log-trail.h>
 #include <gg/log.h>
-#include <gg/trace.h>
 #include <pthread.h>
 #include <string.h>
 #include <unistd.h>
@@ -22,25 +22,25 @@
 
 // Test a) initial state and set
 static void test_initial_and_set(void) {
-    assert(gg_log_current_trace_id() == 0);
-    gg_log_set_trace(0xA34F, 0x34BD, 0);
-    assert(gg_log_current_trace_id() != 0);
-    assert(gg_log_current_trace_id() == 0xA34F);
-    gg_log_clear_trace();
+    assert(gg_log_current_trail_id() == 0);
+    gg_log_set_trail(0xA34F, 0x34BD, 0);
+    assert(gg_log_current_trail_id() != 0);
+    assert(gg_log_current_trail_id() == 0xA34F);
+    gg_log_clear_trail();
     printf("  PASS: test_initial_and_set\n");
 }
 
 // Test b) get returns exact values; clear resets
 static void test_get_and_clear(void) {
-    gg_log_set_trace(0x1234, 0x5678, 0x9ABC);
+    gg_log_set_trail(0x1234, 0x5678, 0x9ABC);
     uint16_t t, s, p;
-    gg_log_get_trace(&t, &s, &p);
+    gg_log_get_trail(&t, &s, &p);
     assert(t == 0x1234);
     assert(s == 0x5678);
     assert(p == 0x9ABC);
-    gg_log_clear_trace();
-    assert(gg_log_current_trace_id() == 0);
-    gg_log_get_trace(&t, &s, &p);
+    gg_log_clear_trail();
+    assert(gg_log_current_trail_id() == 0);
+    gg_log_get_trail(&t, &s, &p);
     assert(t == 0 && s == 0 && p == 0);
     printf("  PASS: test_get_and_clear\n");
 }
@@ -55,11 +55,11 @@ struct thread_args {
 
 static void *thread_fn(void *arg) {
     struct thread_args *a = (struct thread_args *) arg;
-    gg_log_set_trace(a->trace_id, a->span_id, a->parent_span_id);
+    gg_log_set_trail(a->trace_id, a->span_id, a->parent_span_id);
     // Sleep briefly to allow interleaving
     usleep(50000);
     uint16_t t, s, p;
-    gg_log_get_trace(&t, &s, &p);
+    gg_log_get_trail(&t, &s, &p);
     a->ok = (t == a->trace_id && s == a->span_id && p == a->parent_span_id);
     return NULL;
 }
@@ -85,7 +85,7 @@ static void test_thread_isolation(void) {
 
 // Test d) log prefix format
 static void test_log_prefix_format(void) {
-    char tmppath[] = "/tmp/gg_trace_test_XXXXXX";
+    char tmppath[] = "/tmp/gg_log_trail_test_XXXXXX";
     int fd = mkstemp(tmppath);
     assert(fd >= 0);
 
@@ -96,7 +96,7 @@ static void test_log_prefix_format(void) {
     stderr = tmp;
 
     // Log with trace active (parent=0 -> "----")
-    gg_log_set_trace(0xA34F, 0x34BD, 0);
+    gg_log_set_trail(0xA34F, 0x34BD, 0);
     GG_LOGI("hello traced");
     fflush(stderr);
 
@@ -111,7 +111,7 @@ static void test_log_prefix_format(void) {
     assert(strstr(buf, "hello traced") != NULL);
 
     // Now clear trace and log again
-    gg_log_clear_trace();
+    gg_log_clear_trail();
     long pos = ftell(tmp);
     GG_LOGI("hello untraced");
     fflush(stderr);
@@ -136,26 +136,26 @@ static void test_log_prefix_format(void) {
 // === Orchestration tests (ported from ggl-trace) ===
 
 static void test_root_begin_generates_nonzero_and_idempotent(void) {
-    gg_log_clear_trace();
+    gg_log_clear_trail();
 
-    gg_trace_root_begin("test_op", "key=%s", "value");
+    gg_log_trail_root_begin("test_op", "key=%s", "value");
 
     uint16_t t, s, p;
-    gg_log_get_trace(&t, &s, &p);
+    gg_log_get_trail(&t, &s, &p);
     assert(t != 0);
     assert(s != 0);
     assert(p == 0);
-    assert(gg_log_current_trace_id() == t);
+    assert(gg_log_current_trail_id() == t);
 
     // Idempotent: second call does not change IDs
     uint16_t t2, s2, p2;
-    gg_trace_root_begin("other_op", NULL);
-    gg_log_get_trace(&t2, &s2, &p2);
+    gg_log_trail_root_begin("other_op", NULL);
+    gg_log_get_trail(&t2, &s2, &p2);
     assert(t2 == t);
     assert(s2 == s);
     assert(p2 == p);
 
-    gg_log_clear_trace();
+    gg_log_clear_trail();
     printf("  PASS: root_begin generates non-zero IDs and is idempotent\n");
 }
 
@@ -163,13 +163,13 @@ static void test_attach_headers(void) {
     EventStreamHeader hdrs[3];
 
     // No trace active -> returns 0
-    gg_log_clear_trace();
-    size_t n_inactive = gg_trace_attach_headers(hdrs, 3);
+    gg_log_clear_trail();
+    size_t n_inactive = gg_log_trail_attach_headers(hdrs, 3);
     assert(n_inactive == 0);
 
     // Set a known trace
-    gg_log_set_trace(0xBEEF, 0xCAFE, 0x1234);
-    size_t n_active = gg_trace_attach_headers(hdrs, 3);
+    gg_log_set_trail(0xBEEF, 0xCAFE, 0x1234);
+    size_t n_active = gg_log_trail_attach_headers(hdrs, 3);
     assert(n_active == 3);
 
     assert(gg_buffer_eq(hdrs[0].name, GG_STR("T")));
@@ -180,10 +180,10 @@ static void test_attach_headers(void) {
     assert(hdrs[2].value.int32 == (int32_t) 0x1234);
 
     // Capacity < 3 -> returns 0
-    size_t n_small = gg_trace_attach_headers(hdrs, 2);
+    size_t n_small = gg_log_trail_attach_headers(hdrs, 2);
     assert(n_small == 0);
 
-    gg_log_clear_trace();
+    gg_log_clear_trail();
     printf("  PASS: attach_headers correct with/without active trace\n");
 }
 
@@ -211,30 +211,30 @@ static EventStreamMessage encode_decode_headers(
 }
 
 static void test_round_trip(void) {
-    gg_log_clear_trace();
-    gg_log_set_trace(0xA34F, 0x34BD, 0);
+    gg_log_clear_trail();
+    gg_log_set_trail(0xA34F, 0x34BD, 0);
 
     EventStreamHeader hdrs[3];
-    size_t n = gg_trace_attach_headers(hdrs, 3);
+    size_t n = gg_log_trail_attach_headers(hdrs, 3);
     assert(n == 3);
 
     // Encode to wire and decode back to get an EventStreamHeaderIter
     uint8_t wire_buf[256];
     EventStreamMessage msg = encode_decode_headers(hdrs, 3, wire_buf, 256);
 
-    gg_log_clear_trace();
+    gg_log_clear_trail();
 
-    bool applied = gg_trace_extract_and_apply(msg.headers);
+    bool applied = gg_log_trail_extract_and_apply(msg.headers);
     assert(applied);
 
     uint16_t t, s, p;
-    gg_log_get_trace(&t, &s, &p);
+    gg_log_get_trail(&t, &s, &p);
     assert(t == 0xA34F);
     assert(s != 0);
     assert(s != 0x34BD); // fresh span, not caller's
     assert(p == 0x34BD); // parent = caller's span
 
-    gg_log_clear_trace();
+    gg_log_clear_trail();
     printf(
         "  PASS: round-trip preserves trace_id, fresh span, parent=caller\n"
     );
@@ -242,7 +242,7 @@ static void test_round_trip(void) {
 
 static void test_extract_no_t_header(void) {
     // Set a sentinel trace
-    gg_log_set_trace(0x1111, 0x2222, 0x3333);
+    gg_log_set_trail(0x1111, 0x2222, 0x3333);
 
     // Headers without T — just method and type (like a normal core-bus frame)
     EventStreamHeader hdrs[2] = {
@@ -253,23 +253,23 @@ static void test_extract_no_t_header(void) {
     uint8_t wire_buf[256];
     EventStreamMessage msg = encode_decode_headers(hdrs, 2, wire_buf, 256);
 
-    bool applied = gg_trace_extract_and_apply(msg.headers);
+    bool applied = gg_log_trail_extract_and_apply(msg.headers);
     assert(!applied);
 
     // TLS unchanged
     uint16_t t, s, p;
-    gg_log_get_trace(&t, &s, &p);
+    gg_log_get_trail(&t, &s, &p);
     assert(t == 0x1111);
     assert(s == 0x2222);
     assert(p == 0x3333);
 
-    gg_log_clear_trace();
+    gg_log_clear_trail();
     printf("  PASS: extract_and_apply returns false without T header\n");
 }
 
 static void test_extract_wrong_type_t_header(void) {
     // Set a sentinel trace
-    gg_log_set_trace(0x1111, 0x2222, 0x3333);
+    gg_log_set_trail(0x1111, 0x2222, 0x3333);
 
     // T header with wrong type (STRING instead of INT32)
     EventStreamHeader hdrs[2] = {
@@ -280,24 +280,24 @@ static void test_extract_wrong_type_t_header(void) {
     uint8_t wire_buf[256];
     EventStreamMessage msg = encode_decode_headers(hdrs, 2, wire_buf, 256);
 
-    bool applied = gg_trace_extract_and_apply(msg.headers);
+    bool applied = gg_log_trail_extract_and_apply(msg.headers);
     assert(!applied);
 
     // TLS unchanged (sentinel preserved)
     uint16_t t, s, p;
-    gg_log_get_trace(&t, &s, &p);
+    gg_log_get_trail(&t, &s, &p);
     assert(t == 0x1111);
     assert(s == 0x2222);
     assert(p == 0x3333);
 
-    gg_log_clear_trace();
+    gg_log_clear_trail();
     printf(
         "  PASS: extract_and_apply returns false with wrong-type T header\n"
     );
 }
 
 int main(void) {
-    printf("trace_test:\n");
+    printf("log_trail_test:\n");
     test_initial_and_set();
     test_get_and_clear();
     test_thread_isolation();
