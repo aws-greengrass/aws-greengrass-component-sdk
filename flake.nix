@@ -125,7 +125,7 @@
             cmakeBuildType = "MinSizeRel";
             cmakeFlags = [ "-DENABLE_WERROR=1" ]
               ++ lib.optional (!static) "-DBUILD_SHARED_LIBS=1"
-              ++ lib.optional trace "-DGG_LOG_TRACE=ON";
+              ++ lib.optional trace "-DGG_LOG_TRAIL=ON";
             hardeningDisable = [ "all" ];
             dontStrip = true;
           };
@@ -240,7 +240,7 @@
                 src = filteredTestSrc;
                 nativeBuildInputs = [ git cmake ninja ];
                 cmakeBuildType = "MinSizeRel";
-                cmakeFlags = (fetchContentFlags pkgs) ++ [ "-DBUILD_TESTING=1" "-DBUILD_SAMPLES=0" "-DGG_LOG_TRACE=ON" ];
+                cmakeFlags = (fetchContentFlags pkgs) ++ [ "-DBUILD_TESTING=1" "-DBUILD_SAMPLES=0" "-DGG_LOG_TRAIL=ON" ];
                 postBuild = ''
                   ctest --verbose
                 '';

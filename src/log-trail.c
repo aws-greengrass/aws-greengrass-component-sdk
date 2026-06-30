@@ -2,9 +2,9 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-#include <gg/trace.h>
+#include <gg/log-trail.h>
 
-#ifdef GG_TRACE_ENABLED
+#ifdef GG_LOG_TRAIL_ENABLED
 
 #include <gg/buffer.h>
 #include <gg/error.h>
@@ -27,14 +27,14 @@ static uint16_t gen_nonzero_id(void) {
     return id;
 }
 
-void gg_trace_root_begin(const char *kind, const char *fmt, ...) {
-    if (gg_log_current_trace_id() != 0U) {
+void gg_log_trail_root_begin(const char *kind, const char *fmt, ...) {
+    if (gg_log_current_trail_id() != 0U) {
         return;
     }
 
     uint16_t trace_id = gen_nonzero_id();
     uint16_t span_id = gen_nonzero_id();
-    gg_log_set_trace(trace_id, span_id, 0);
+    gg_log_set_trail(trace_id, span_id, 0);
 
     if (fmt != NULL) {
         char buf[128] = { 0 };
@@ -48,13 +48,13 @@ void gg_trace_root_begin(const char *kind, const char *fmt, ...) {
     }
 }
 
-size_t gg_trace_attach_headers(
+size_t gg_log_trail_attach_headers(
     EventStreamHeader *headers, size_t headers_capacity
 ) {
     uint16_t t;
     uint16_t s;
     uint16_t p;
-    gg_log_get_trace(&t, &s, &p);
+    gg_log_get_trail(&t, &s, &p);
     if (t == 0U) {
         return 0;
     }
@@ -74,7 +74,7 @@ size_t gg_trace_attach_headers(
     return 3;
 }
 
-bool gg_trace_extract_and_apply(EventStreamHeaderIter headers) {
+bool gg_log_trail_extract_and_apply(EventStreamHeaderIter headers) {
     uint16_t trace_id = 0;
     uint16_t caller_span = 0;
     bool found_t = false;
@@ -99,8 +99,8 @@ bool gg_trace_extract_and_apply(EventStreamHeaderIter headers) {
     }
 
     uint16_t fresh_span = gen_nonzero_id();
-    gg_log_set_trace(trace_id, fresh_span, caller_span);
+    gg_log_set_trail(trace_id, fresh_span, caller_span);
     return true;
 }
 
-#endif // GG_TRACE_ENABLED
+#endif // GG_LOG_TRAIL_ENABLED
