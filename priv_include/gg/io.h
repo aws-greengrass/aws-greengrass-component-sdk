@@ -10,6 +10,8 @@
 #include <gg/attr.h>
 #include <gg/buffer.h>
 #include <gg/error.h>
+#include <gg/object.h>
+#include <gg/types.h>
 #include <stdio.h>
 
 /// Abstraction for streaming data into
@@ -65,5 +67,26 @@ static inline GgError gg_reader_call_exact(GgReader reader, GgBuffer buf) {
 /// Returns a writer that writes into a buffer, consuming used portion
 VISIBILITY(hidden)
 GgWriter gg_buf_writer(GgBuffer *buf);
+
+/// Abstraction for submitting a GgObject into
+typedef struct {
+    GgError (*submit)(void *ctx, GgObject object);
+    void *ctx;
+} GgObjectReceiver;
+
+/// Pass an object to a GgObjectReceiver
+static inline GgError gg_object_receiver_submit(
+    GgObjectReceiver receiver, GgObject object
+) {
+    if (receiver.submit == NULL) {
+        return (gg_obj_type(object) == GG_TYPE_NULL) ? GG_ERR_OK
+                                                     : GG_ERR_FAILURE;
+    }
+
+    return receiver.submit(receiver.ctx, object);
+}
+
+/// Receiver which accepts no object.
+#define GG_NULL_OBJ_RECEIVER (GgObjectReceiver) { 0 }
 
 #endif
