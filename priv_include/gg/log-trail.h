@@ -30,6 +30,25 @@ size_t gg_log_trail_attach_headers(
 /// Returns true if trace context was found and applied; false otherwise.
 bool gg_log_trail_extract_and_apply(EventStreamHeaderIter headers);
 
+/// Snapshot of a thread's trail context. Returned by the subspan begin call
+/// and consumed by the scope-exit cleanup to restore the caller's context.
+typedef struct {
+    uint16_t trace_id;
+    uint16_t span_id;
+    uint16_t parent_span_id;
+} GgLogTrailState;
+
+/// Begin a new sub-span within the current trace and log a subspan_start line.
+/// Preserves trace_id, generates a fresh span_id, and makes the caller's
+/// span_id the new parent_span_id. Returns the caller's previous state so the
+/// scope-cleanup can restore it. No-op if no trace is active.
+GgLogTrailState gg_log_trail_subspan_begin(const char *kind);
+
+// Internal: cleanup callback for GG_LOG_TRAIL_SUBSPAN_SCOPE.
+static inline void gg_log_trail_subspan_end_(const GgLogTrailState *saved) {
+    gg_log_set_trail(saved->trace_id, saved->span_id, saved->parent_span_id);
+}
+
 // Internal: cleanup callback for GG_LOG_TRAIL_SCOPE_GUARD.
 static inline void gg_log_trail_scope_clear_(const int *guard) {
     (void) guard;
@@ -62,11 +81,22 @@ static inline void gg_log_trail_scope_clear_(const int *guard) {
     gg_log_trail_extract_and_apply(headers); \
     GG_LOG_TRAIL_SCOPE_GUARD()
 
+/// Begin a sub-span keyed off GG_MODULE and restore the parent context on
+/// scope exit. trace_id is preserved; a fresh span_id is generated; the
+/// previous span_id becomes parent_span_id. No-op if no trace is active.
+/// NOTE: declares a scope-guard variable, so it must be used inside a brace
+/// block.
+#define GG_LOG_TRAIL_SUBSPAN_SCOPE() \
+    __attribute__((cleanup(gg_log_trail_subspan_end_))) const GgLogTrailState \
+    GG_MACRO_PASTE(gg_log_trail_subspan_, __LINE__) \
+        = gg_log_trail_subspan_begin(GG_MODULE)
+
 #else
 
 #define GG_LOG_TRAIL_SCOPE_GUARD()
 #define GG_LOG_TRAIL_ROOT_SCOPE(...)
 #define GG_LOG_TRAIL_INHERIT_SCOPE(headers)
+#define GG_LOG_TRAIL_SUBSPAN_SCOPE()
 
 #endif // GG_LOG_TRAIL_ENABLED
 
