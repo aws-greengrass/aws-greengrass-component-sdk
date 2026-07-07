@@ -103,4 +103,19 @@ bool gg_log_trail_extract_and_apply(EventStreamHeaderIter headers) {
     return true;
 }
 
+GgLogTrailState gg_log_trail_subspan_begin(const char *kind) {
+    GgLogTrailState saved;
+    gg_log_get_trail(&saved.trace_id, &saved.span_id, &saved.parent_span_id);
+    if (saved.trace_id == 0U) {
+        // No active trace; nothing to open.
+        return saved;
+    }
+    uint16_t new_span_id = gen_nonzero_id();
+    gg_log_set_trail(saved.trace_id, new_span_id, saved.span_id);
+    if (kind != NULL) {
+        GG_LOGD("subspan_start: %s", kind);
+    }
+    return saved;
+}
+
 #endif // GG_LOG_TRAIL_ENABLED

@@ -296,6 +296,92 @@ static void test_extract_wrong_type_t_header(void) {
     );
 }
 
+// === Subspan tests ===
+
+// Basic subspan: preserves trace_id, generates a fresh span_id, sets caller's
+// span as the new parent_span_id.
+static void test_subspan_basic(void) {
+    gg_log_set_trail(0xAAAA, 0xBBBB, 0xCCCC);
+
+    GgLogTrailState saved = gg_log_trail_subspan_begin("test_kind");
+    // Saved should hold the caller's context.
+    assert(saved.trace_id == 0xAAAA);
+    assert(saved.span_id == 0xBBBB);
+    assert(saved.parent_span_id == 0xCCCC);
+
+    uint16_t t, s, p;
+    gg_log_get_trail(&t, &s, &p);
+    assert(t == 0xAAAA); // trace_id preserved
+    assert(s != 0xBBBB); // fresh span_id
+    assert(s != 0); // and it's non-zero
+    assert(p == 0xBBBB); // caller's span is our parent
+
+    gg_log_trail_subspan_end_(&saved);
+    gg_log_get_trail(&t, &s, &p);
+    assert(t == 0xAAAA);
+    assert(s == 0xBBBB);
+    assert(p == 0xCCCC);
+
+    gg_log_clear_trail();
+    printf("  PASS: subspan preserves trace, fresh span, parent=caller\n");
+}
+
+// Nested subspan: outer sub-span becomes inner's parent, restore unwinds
+// correctly.
+static void test_subspan_nested(void) {
+    gg_log_set_trail(0xAAAA, 0xBBBB, 0xCCCC);
+
+    GgLogTrailState outer = gg_log_trail_subspan_begin("outer");
+    uint16_t t, outer_span, p;
+    gg_log_get_trail(&t, &outer_span, &p);
+    assert(p == 0xBBBB);
+
+    GgLogTrailState inner = gg_log_trail_subspan_begin("inner");
+    uint16_t inner_span;
+    gg_log_get_trail(&t, &inner_span, &p);
+    assert(t == 0xAAAA);
+    assert(inner_span != outer_span);
+    assert(inner_span != 0);
+    assert(p == outer_span); // inner's parent is outer's span
+
+    gg_log_trail_subspan_end_(&inner);
+    // After inner exits, outer's context should be back.
+    uint16_t t2, s2, p2;
+    gg_log_get_trail(&t2, &s2, &p2);
+    assert(t2 == 0xAAAA);
+    assert(s2 == outer_span);
+    assert(p2 == 0xBBBB);
+
+    gg_log_trail_subspan_end_(&outer);
+    gg_log_get_trail(&t2, &s2, &p2);
+    assert(t2 == 0xAAAA);
+    assert(s2 == 0xBBBB);
+    assert(p2 == 0xCCCC);
+
+    gg_log_clear_trail();
+    printf("  PASS: nested subspans, inner parent = outer span\n");
+}
+
+// No-op path: subspan with no active trace leaves TLS at (0,0,0).
+static void test_subspan_no_active_trace(void) {
+    assert(gg_log_current_trail_id() == 0);
+    GgLogTrailState saved = gg_log_trail_subspan_begin("no_trace");
+    assert(saved.trace_id == 0);
+    assert(saved.span_id == 0);
+    assert(saved.parent_span_id == 0);
+
+    uint16_t t, s, p;
+    gg_log_get_trail(&t, &s, &p);
+    assert(t == 0);
+    assert(s == 0);
+    assert(p == 0);
+
+    gg_log_trail_subspan_end_(&saved); // safe restore, still zero
+    gg_log_get_trail(&t, &s, &p);
+    assert(t == 0 && s == 0 && p == 0);
+    printf("  PASS: subspan is no-op when no trace active\n");
+}
+
 int main(void) {
     printf("log_trail_test:\n");
     test_initial_and_set();
@@ -307,6 +393,9 @@ int main(void) {
     test_round_trip();
     test_extract_no_t_header();
     test_extract_wrong_type_t_header();
+    test_subspan_basic();
+    test_subspan_nested();
+    test_subspan_no_active_trace();
     printf("ALL PASS\n");
     return 0;
 }
