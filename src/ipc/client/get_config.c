@@ -2,6 +2,7 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#include "get_config_common.h"
 #include <gg/arena.h>
 #include <gg/attr.h>
 #include <gg/buffer.h>
@@ -39,7 +40,7 @@ static GgError error_handler(void *ctx, GgBuffer error_code, GgBuffer message) {
 }
 
 NONNULL(3)
-static GgError ggipc_get_config_common(
+GgError ggipc_get_config_common(
     GgBufList key_path,
     const GgBuffer *component_name,
     GgIpcResultCallback *result_callback,
@@ -75,7 +76,7 @@ static GgError ggipc_get_config_common(
     );
 }
 
-static GgError get_resp_value(
+GgError ggipc_get_config_resp_value(
     GgMap resp, GgObject **value, GgBuffer *final_key
 ) {
     GgError ret = gg_map_validate(
@@ -109,7 +110,8 @@ static GgError copy_config_obj(void *ctx, GgMap result) {
     CopyObjectCtx *copy_ctx = ctx;
 
     GgObject *value;
-    GgError ret = get_resp_value(result, &value, copy_ctx->final_key);
+    GgError ret
+        = ggipc_get_config_resp_value(result, &value, copy_ctx->final_key);
     if (ret != GG_ERR_OK) {
         return GG_ERR_INVALID;
     }
@@ -157,7 +159,8 @@ static GgError copy_config_buf(void *ctx, GgMap result) {
     CopyBufferCtx *resp_ctx = ctx;
 
     GgObject *value;
-    GgError ret = get_resp_value(result, &value, resp_ctx->final_key);
+    GgError ret
+        = ggipc_get_config_resp_value(result, &value, resp_ctx->final_key);
     if (ret != GG_ERR_OK) {
         return GG_ERR_INVALID;
     }
