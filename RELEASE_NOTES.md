@@ -1,3 +1,14 @@
+# Release Notes v1.0.5
+
+## New Features
+
+- The CreateLocalDeployment IPC command is now supported.
+
+## Bug Fixes
+
+- Asserts are now stripped in release modes. This may reduce binary size.
+- Fix Rust bindings double free in raw call/subscribe APIs.
+
 # Release Notes v1.0.4
 
 ## Bug Fixes
