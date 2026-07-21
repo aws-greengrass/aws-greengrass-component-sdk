@@ -11,6 +11,7 @@
 #include <gg/ipc/types.h>
 #include <gg/object.h>
 #include <gg/types.h>
+#include <stdbool.h>
 #include <stdint.h>
 
 struct timespec;
@@ -100,6 +101,21 @@ GgError ggipc_subscribe_to_iot_core(
     GgBuffer topic_filter,
     uint8_t qos,
     GgIpcSubscribeToIotCoreCallback *callback,
+    void *ctx,
+    GgIpcSubscriptionHandle *handle
+);
+
+typedef void GgIpcSubscribeToIotCoreConnectionStatusCallback(
+    void *ctx, bool connected, GgIpcSubscriptionHandle handle
+);
+
+/// Subscribe to IoT Core MQTT connection status changes.
+/// The callback receives the current connection status immediately after
+/// subscribing, then on each subsequent CONNECTED/DISCONNECTED transition.
+/// No accessControl authorization policy is required for this operation.
+NONNULL(1)
+GgError ggipc_subscribe_to_iot_core_connection_status(
+    GgIpcSubscribeToIotCoreConnectionStatusCallback *callback,
     void *ctx,
     GgIpcSubscriptionHandle *handle
 );
