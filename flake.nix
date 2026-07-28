@@ -306,7 +306,7 @@
                 cargoLock.lockFile = ./rust/Cargo.lock;
                 cargoRoot = "rust";
                 buildAndTestSubdir = "rust";
-                cargoBuildFlags = [ "--all-targets" ];
+                cargoBuildFlags = [ "--all-targets" "--frozen" ];
                 cargoTestFlags = [ "--all-targets" ];
                 postCheck = ''
                   pushd rust
