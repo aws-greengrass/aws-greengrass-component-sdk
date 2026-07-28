@@ -34,8 +34,7 @@ static inline void cleanup_pthread_mtx_unlock(pthread_mutex_t **mtx) {
 // NOLINTBEGIN(bugprone-macro-parentheses)
 #define GG_MTX_SCOPE_GUARD_ID(ident, mtx) \
     __attribute__((cleanup(cleanup_pthread_mtx_unlock))) \
-    pthread_mutex_t *ident \
-        = mtx; \
+    pthread_mutex_t *ident = mtx; \
     pthread_mutex_lock(ident);
 // NOLINTEND(bugprone-macro-parentheses)
 

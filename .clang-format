@@ -1,7 +1,9 @@
 ---
 Language: Cpp
 BasedOnStyle: WebKit
-AlignAfterOpenBracket: BlockIndent
+AlignAfterOpenBracket: true
+BreakAfterOpenBracketFunction: true
+BreakBeforeCloseBracketFunction: true
 AlignEscapedNewlines: DontAlign
 AllowShortEnumsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: None
@@ -25,6 +27,7 @@ PointerAlignment: Right
 QualifierAlignment: Left
 SeparateDefinitionBlocks: Always
 SpaceAfterCStyleCast: true
+SpaceInEmptyBraces: Block
 PenaltyReturnTypeOnItsOwnLine: 240
 AttributeMacros:
 ForEachMacros:

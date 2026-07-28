@@ -61,8 +61,7 @@ static inline void gg_log_trail_scope_clear_(const int *guard) {
 /// gg_log_clear_trail()).
 #define GG_LOG_TRAIL_SCOPE_GUARD() \
     __attribute__((cleanup(gg_log_trail_scope_clear_))) const int \
-    GG_MACRO_PASTE(gg_log_trail_guard_, __LINE__) \
-        = 0
+    GG_MACRO_PASTE(gg_log_trail_guard_, __LINE__) = 0
 
 /// Begin a root trace and clear it automatically on scope exit.
 /// Forwards all args to gg_log_trail_root_begin(kind, fmt, ...).

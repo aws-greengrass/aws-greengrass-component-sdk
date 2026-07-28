@@ -10,3 +10,9 @@ IncludeCategories:
   - Regex: "^<.*>$"
     Priority: 4
 BreakTemplateDeclarations: Yes
+
+# These are set in the parent config, but clang-format 22 does not propagate
+# them through InheritParentConfig, so they must be repeated here.
+# See https://github.com/llvm/llvm-project/issues/184880
+BreakAfterOpenBracketFunction: true
+BreakBeforeCloseBracketFunction: true

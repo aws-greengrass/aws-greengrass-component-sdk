@@ -94,7 +94,7 @@
           { llvmPackages_latest
           , cmake-format
           , rustfmt
-          , nodePackages
+          , prettier
           , yapf
           , ...
           }:
@@ -102,7 +102,7 @@
             fmt-c = "${llvmPackages_latest.clang-unwrapped}/bin/clang-format -i";
             fmt-cmake = "${cmake-format}/bin/cmake-format -i";
             fmt-yaml =
-              "${nodePackages.prettier}/bin/prettier --write --parser yaml";
+              "${prettier}/bin/prettier --write --parser yaml";
           in
           {
             "*.c" = fmt-c;
@@ -270,7 +270,7 @@
             '';
 
             spelling = pkgs: ''
-              ${pkgs.nodePackages.cspell}/bin/cspell "**" --quiet
+              ${pkgs.cspell}/bin/cspell "**" --quiet
               ${pkgs.coreutils}/bin/sort -cuf misc/dictionary.txt
             '';
 
@@ -336,17 +336,6 @@
                 ];
               })
             { };
-          cbmc = prev.cbmc.overrideAttrs {
-            version = "6.7.1";
-            src = final.fetchFromGitHub {
-              owner = "diffblue";
-              repo = "cbmc";
-              # Includes commits after 6.7.1 needed for harness generation
-              # Use tag when 6.7.2 is released
-              rev = "062962c1da7149be418338b1f2220d51960e06f8";
-              hash = "sha256-qcCiKv+AUoiIZdiCK955Bl5GBK+JHv0mDflQ4aAj4IQ=";
-            };
-          };
         };
 
         apps.package-rust-crate = pkgs: ''
