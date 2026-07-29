@@ -263,7 +263,7 @@ impl Sdk {
             cb(topic_str, unpacked);
         }
 
-        let ctx = callback as *const F;
+        let ctx = ptr::from_ref(callback);
         let mut handle = c::GgIpcSubscriptionHandle { val: 0 };
 
         Result::from(unsafe {
@@ -351,7 +351,7 @@ impl Sdk {
             cb(topic_str, payload_bytes);
         }
 
-        let ctx = callback as *const F;
+        let ctx = ptr::from_ref(callback);
         let mut handle = c::GgIpcSubscriptionHandle { val: 0 };
 
         Result::from(unsafe {
@@ -674,7 +674,7 @@ impl Sdk {
 
         let component_buf = component_name.map(c::GgBuffer::from);
 
-        let ctx = callback as *const F;
+        let ctx = ptr::from_ref(callback);
         let mut handle = c::GgIpcSubscriptionHandle { val: 0 };
 
         Result::from(unsafe {
@@ -822,7 +822,7 @@ impl Sdk {
             cb(name);
         }
 
-        let ctx = callback as *mut F;
+        let ctx = ptr::from_mut(callback);
 
         Result::from(unsafe {
             c::ggipc_list_named_shadows_for_thing(
@@ -994,7 +994,7 @@ impl Sdk {
 
         let mut response_callback = ManuallyDrop::new(response_callback);
         let mut handle = c::GgIpcSubscriptionHandle { val: 0 };
-        let ctx = sub_callback as *const G;
+        let ctx = ptr::from_ref(sub_callback);
 
         Result::from(unsafe {
             c::ggipc_subscribe(
