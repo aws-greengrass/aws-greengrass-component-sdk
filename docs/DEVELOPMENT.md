@@ -35,3 +35,29 @@ coverity scan
 ```
 
 The html output will be in `build/cov-out`.
+
+## Releasing
+
+The following is the process for cutting a release of this repo. Use previous
+releases as examples.
+
+1. Ensure CI is green on main branch.
+2. Ensure all new features have been added to all the bindings.
+3. Make a release PR updating just the release notes and versions.
+   1. Add a new section to top of release notes with sections with lists of new
+      features and bug fixes customers should be made aware of. Skip mentioning
+      commits which don't have customer impact.
+   2. Update the version in `rust/Cargo.toml` and run cargo to update the
+      version in `rust/Cargo.lock` accordingly.
+   3. Use the format "Release vX.Y.Z" for the PR description and you can leave
+      PR body blank.
+4. Merge the release PR when ready.
+5. Tag the release with an annotated tag (`-a` flag to `git tag`).
+   1. Run `git tag -a vX.Y.Z`
+   2. For the tag message, use "vX.Y.Z release" for the title, and copy the new
+      release notes section into the description. Remove the markdown markup
+      from the copied release notes (lists are fine). Note that this should be
+      79 col wrapped to match git conventions. See previous tags for examples.
+   3. Push the tag after verifying it is an annotated tag.
+6. Make a Github release from the tag. Use same title and body as the tag
+   message. Note that Github does not handle line wrapping, so unwrap the lines.
