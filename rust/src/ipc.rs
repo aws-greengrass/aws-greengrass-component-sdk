@@ -371,6 +371,48 @@ impl Sdk {
         })
     }
 
+    /// Subscribe to IoT Core MQTT connection status changes.
+    ///
+    /// The callback receives `true` when the nucleus is connected to AWS IoT
+    /// Core and `false` when disconnected. It is called with the current
+    /// connection status immediately after subscribing, then on each
+    /// subsequent CONNECTED/DISCONNECTED transition.
+    ///
+    /// No accessControl authorization policy is required for this operation.
+    ///
+    /// # Errors
+    /// Returns error if subscription fails.
+    pub fn subscribe_to_iot_core_connection_status<'a, F: Fn(bool)>(
+        &self,
+        callback: &'a F,
+    ) -> Result<Subscription<'a, F>> {
+        extern "C" fn trampoline<F: Fn(bool)>(
+            ctx: *mut ffi::c_void,
+            connected: bool,
+            _handle: c::GgIpcSubscriptionHandle,
+        ) {
+            let cb = unsafe { &*ctx.cast::<F>() };
+            cb(connected);
+        }
+
+        let ctx = ptr::from_ref(callback);
+        let mut handle = c::GgIpcSubscriptionHandle { val: 0 };
+
+        Result::from(unsafe {
+            c::ggipc_subscribe_to_iot_core_connection_status(
+                Some(trampoline::<F>),
+                ctx.cast::<ffi::c_void>().cast_mut(),
+                &raw mut handle,
+            )
+        })?;
+
+        debug_assert!(handle.val != 0);
+        Ok(Subscription {
+            handle,
+            phantom: PhantomData,
+        })
+    }
+
     /// Update component state.
     ///
     /// Reports component state to the Greengrass nucleus.
