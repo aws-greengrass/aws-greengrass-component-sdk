@@ -102,6 +102,12 @@ public:
     ) = 0;
 };
 
+class ConnectionStatusCallback {
+public:
+    virtual ~ConnectionStatusCallback() noexcept = default;
+    virtual void operator()(bool connected, Subscription &handle) = 0;
+};
+
 class Client {
 private:
     constexpr Client() noexcept = default;
@@ -175,6 +181,16 @@ public:
         std::uint8_t qos,
         IotTopicCallback &callback,
         Subscription *handle = nullptr
+    ) noexcept;
+
+    /// Subscribe to IoT Core MQTT connection status changes.
+    /// The callback receives the current connection status immediately after
+    /// subscribing, then on each subsequent CONNECTED/DISCONNECTED transition.
+    /// No accessControl authorization policy is required for this operation.
+    /// See:
+    /// <https://docs.aws.amazon.com/greengrass/v2/developerguide/ipc-iot-core-mqtt.html>
+    std::error_code subscribe_to_iot_core_connection_status(
+        ConnectionStatusCallback &callback, Subscription *handle = nullptr
     ) noexcept;
 
     /// Update the state of this component.

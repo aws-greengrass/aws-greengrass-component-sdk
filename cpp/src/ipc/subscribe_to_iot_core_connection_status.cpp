@@ -1,0 +1,60 @@
+// aws-greengrass-component-sdk - Lightweight AWS IoT Greengrass SDK
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+#include <gg/error.hpp>
+#include <gg/ipc/client.hpp>
+#include <gg/ipc/subscription.hpp>
+#include <exception>
+#include <functional>
+#include <iostream>
+#include <source_location>
+#include <system_error>
+
+extern "C" {
+#include <gg/ipc/client.h>
+}
+
+namespace gg::ipc {
+extern "C" {
+namespace {
+    void subscribe_to_iot_core_connection_status_callback(
+        void *ctx, bool connected, GgIpcSubscriptionHandle handle
+    ) noexcept try {
+        Subscription locked { handle };
+        std::invoke(
+            *static_cast<ConnectionStatusCallback *>(ctx), connected, locked
+        );
+        (void) locked.release();
+    } catch (const std::exception &e) {
+        std::cerr << "Exception caught in "
+                  << std::source_location {}.function_name() << '\n'
+                  << e.what() << '\n';
+    } catch (...) {
+        std::cerr << "Exception caught in "
+                  << std::source_location {}.function_name() << '\n';
+    }
+}
+}
+
+// singleton interface class.
+// NOLINTBEGIN(readability-convert-member-functions-to-static)
+
+std::error_code Client::subscribe_to_iot_core_connection_status(
+    ConnectionStatusCallback &callback, Subscription *handle
+) noexcept {
+    GgIpcSubscriptionHandle raw_handle;
+    GgError ret = ggipc_subscribe_to_iot_core_connection_status(
+        subscribe_to_iot_core_connection_status_callback,
+        &callback,
+        (handle != nullptr) ? &raw_handle : nullptr
+    );
+    if ((handle != nullptr) && (ret == GG_ERR_OK)) {
+        handle->reset(raw_handle);
+    }
+    return ret;
+}
+
+// NOLINTEND(readability-convert-member-functions-to-static)
+
+}
