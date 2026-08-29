@@ -75,6 +75,9 @@
             clippy
             rustfmt
             rust-analyzer-unwrapped
+            python3
+            python3Packages.scikit-build-core
+            python3Packages.pip
           ];
           env = { rustPlatform, ... }: {
             NIX_HARDENING_ENABLE = "";

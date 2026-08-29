@@ -1,0 +1,38 @@
+{
+  "RecipeFormatVersion": "2020-01-25",
+  "ComponentName": "com.example.ListNamedShadowsForThingPython",
+  "ComponentVersion": "1.0.0",
+  "ComponentDescription": "A component that lists named shadows for a thing.",
+  "ComponentPublisher": "Amazon",
+  "ComponentConfiguration": {
+    "DefaultConfiguration": {
+      "accessControl": {
+        "aws.greengrass.ShadowManager": {
+          "com.example.ListNamedShadowsForThingPython:shadow:1": {
+            "policyDescription": "Allows listing named shadows for a thing.",
+            "operations": ["aws.greengrass#ListNamedShadowsForThing"],
+            "resources": ["*"]
+          }
+        }
+      }
+    }
+  },
+  "Manifests": [
+    {
+      "Platform": {
+        "os": "linux"
+      },
+      "Lifecycle": {
+        "run": "python3 -u {artifacts:path}/list_named_shadows_for_thing.py"
+      },
+      "Artifacts": [
+        {
+          "URI": "s3://amzn-s3-demo-bucket/artifacts/com.example.ListNamedShadowsForThingPython/1.0.0/list_named_shadows_for_thing.py",
+          "Permission": {
+            "Read": "ALL"
+          }
+        }
+      ]
+    }
+  ]
+}
