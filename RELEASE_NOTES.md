@@ -1,3 +1,10 @@
+# Release Notes v1.1.0
+
+## New Features
+
+- New SubscribeToIoTCoreConnectionStatus IPC command allows getting notified
+  when the device is disconnects or reconnects.
+
 # Release Notes v1.0.5
 
 ## New Features
