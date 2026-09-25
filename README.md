@@ -37,11 +37,11 @@ The following Greengrass v2 IPC operations are currently supported by this SDK:
 ## Sample Greengrass Components
 
 For deployment instructions, see the
-[samples deployment guide](samples/README.md).
+[samples deployment guide](https://github.com/aws-greengrass/aws-greengrass-component-sdk/blob/main/samples/README.md).
 
-- [C samples](samples/)
-- [C++ samples](cpp/samples/)
-- [Rust samples](rust/examples/)
+- [C samples](https://github.com/aws-greengrass/aws-greengrass-component-sdk/tree/main/samples)
+- [C++ samples](https://github.com/aws-greengrass/aws-greengrass-component-sdk/tree/main/cpp/samples)
+- [Rust samples](https://github.com/aws-greengrass/aws-greengrass-component-sdk/tree/main/rust/examples)
 
 ## Security
 
